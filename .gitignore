@@ -27,3 +27,7 @@ Thumbs.db
 *.key
 *.pem
 *.p12
+
+# Logs
+*.log
+backend/uvicorn.log

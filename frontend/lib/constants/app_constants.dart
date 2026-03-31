@@ -2,38 +2,50 @@ import 'package:flutter/material.dart';
 
 /// App colors - following Chinese stock market convention (red = up, green = down)
 class AppColors {
-  /// Up/Gain color (red)
-  static const Color upColor = Color(0xFFD32F2F);
-  
-  /// Down/Loss color (green)
-  static const Color downColor = Color(0xFF388E3C);
-  
+  /// Up/Gain color (red) - Hong Kong convention
+  static const Color upColor = Color(0xFFF03E3E);
+
+  /// Down/Loss color (green) - Hong Kong convention
+  static const Color downColor = Color(0xFF3FB950);
+
   /// Neutral color (gray)
   static const Color neutralColor = Color(0xFF757575);
-  
+
   /// Primary color
-  static const Color primary = Color(0xFF1976D2);
-  
+  static const Color primary = Color(0xFF58A6FF);
+
   /// Primary dark
   static const Color primaryDark = Color(0xFF1565C0);
-  
+
+  /// Accent blue (used for highlights and interactive elements)
+  static const Color accentBlue = Color(0xFF58A6FF);
+
+  /// Dark background (main app background)
+  static const Color darkBg = Color(0xFF0D1117);
+
+  /// Card background (slightly lighter than darkBg)
+  static const Color cardBg = Color(0xFF161B22);
+
+  /// Border color for cards and dividers
+  static const Color borderColor = Color(0xFF30363D);
+
   /// Background light
   static const Color backgroundLight = Color(0xFFFAFAFA);
-  
-  /// Background dark
-  static const Color backgroundDark = Color(0xFF121212);
-  
-  /// Card background
-  static const Color cardBackground = Colors.white;
-  
+
+  /// Background dark (alias)
+  static const Color backgroundDark = Color(0xFF0D1117);
+
+  /// Card background alias
+  static const Color cardBackground = Color(0xFF161B22);
+
   /// Text primary
-  static const Color textPrimary = Color(0xFF212121);
-  
+  static const Color textPrimary = Color(0xFFE6EDF3);
+
   /// Text secondary
-  static const Color textSecondary = Color(0xFF757575);
-  
+  static const Color textSecondary = Color(0xFF8B949E);
+
   /// Divider color
-  static const Color divider = Color(0xFFE0E0E0);
+  static const Color divider = Color(0xFF30363D);
 }
 
 /// App sizing constants

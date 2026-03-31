@@ -47,8 +47,8 @@ class MarketScreen extends ConsumerWidget {
     
     return RefreshIndicator(
       onRefresh: () async {
-        ref.refresh(marketIndicesProvider);
-        ref.refresh(marketMoversProvider);
+        ref.invalidate(marketIndicesProvider);
+        ref.invalidate(marketMoversProvider);
       },
       child: SingleChildScrollView(
         physics: const AlwaysScrollableScrollPhysics(),
@@ -126,7 +126,7 @@ class MarketScreen extends ConsumerWidget {
     
     return RefreshIndicator(
       onRefresh: () async {
-        ref.refresh(marketMoversProvider);
+        ref.invalidate(marketMoversProvider);
       },
       child: moversAsync.when(
         data: (movers) => ListView.builder(
@@ -150,7 +150,7 @@ class MarketScreen extends ConsumerWidget {
     
     return RefreshIndicator(
       onRefresh: () async {
-        ref.refresh(marketMoversProvider);
+        ref.invalidate(marketMoversProvider);
       },
       child: moversAsync.when(
         data: (movers) => ListView.builder(

@@ -204,6 +204,180 @@ class ApiService {
     }
   }
   
+  /// Get watchlist items
+  /// Returns list of [WatchlistItem]
+  Future<List<WatchlistItem>> getWatchlist() async {
+    try {
+      final response = await _dio.get('/watchlist');
+      if (response.statusCode == 200) {
+        final data = response.data as List;
+        return data
+            .map((json) => WatchlistItem.fromJson(json as Map<String, dynamic>))
+            .toList();
+      }
+      throw Exception('Failed to load watchlist');
+    } catch (e) {
+      print('Error fetching watchlist: $e');
+      rethrow;
+    }
+  }
+  
+  /// Add stock to watchlist
+  /// [ticker] - stock code
+  /// [alertPrice] - optional alert price
+  /// [alertType] - 'above' or 'below'
+  Future<WatchlistItem> addToWatchlist(
+    String ticker, {
+    double? alertPrice,
+    String? alertType,
+  }) async {
+    try {
+      final response = await _dio.post(
+        '/watchlist',
+        data: {
+          'ticker': ticker,
+          'alert_price': alertPrice,
+          'alert_type': alertType,
+        },
+      );
+      if (response.statusCode == 200 || response.statusCode == 201) {
+        return WatchlistItem.fromJson(response.data as Map<String, dynamic>);
+      }
+      throw Exception('Failed to add to watchlist');
+    } catch (e) {
+      print('Error adding to watchlist: $e');
+      rethrow;
+    }
+  }
+  
+  /// Remove stock from watchlist
+  /// [ticker] - stock code
+  Future<void> removeFromWatchlist(String ticker) async {
+    try {
+      final response = await _dio.delete('/watchlist/$ticker');
+      if (response.statusCode != 200 && response.statusCode != 204) {
+        throw Exception('Failed to remove from watchlist');
+      }
+    } catch (e) {
+      print('Error removing from watchlist: $e');
+      rethrow;
+    }
+  }
+  
+  /// Get portfolio summary
+  /// Returns [PortfolioSummary]
+  Future<PortfolioSummary> getPortfolioSummary() async {
+    try {
+      final response = await _dio.get('/portfolio/summary');
+      if (response.statusCode == 200) {
+        return PortfolioSummary.fromJson(response.data as Map<String, dynamic>);
+      }
+      throw Exception('Failed to load portfolio summary');
+    } catch (e) {
+      print('Error fetching portfolio summary: $e');
+      rethrow;
+    }
+  }
+  
+  /// Get current positions
+  /// Returns list of [Position]
+  Future<List<Position>> getPositions() async {
+    try {
+      final response = await _dio.get('/portfolio/positions');
+      if (response.statusCode == 200) {
+        final data = response.data as List;
+        return data
+            .map((json) => Position.fromJson(json as Map<String, dynamic>))
+            .toList();
+      }
+      throw Exception('Failed to load positions');
+    } catch (e) {
+      print('Error fetching positions: $e');
+      rethrow;
+    }
+  }
+  
+  /// Get trade history
+  /// [limit] - max number of trades to return (default 100)
+  /// [offset] - pagination offset (default 0)
+  /// Returns list of [Trade]
+  Future<List<Trade>> getTrades({int limit = 100, int offset = 0}) async {
+    try {
+      final response = await _dio.get(
+        '/trades',
+        queryParameters: {
+          'limit': limit,
+          'offset': offset,
+        },
+      );
+      if (response.statusCode == 200) {
+        final data = response.data as List;
+        return data
+            .map((json) => Trade.fromJson(json as Map<String, dynamic>))
+            .toList();
+      }
+      throw Exception('Failed to load trades');
+    } catch (e) {
+      print('Error fetching trades: $e');
+      rethrow;
+    }
+  }
+  
+  /// Add a new trade (BUY or SELL)
+  /// [ticker] - stock code
+  /// [type] - 'BUY' or 'SELL'
+  /// [quantity] - number of shares
+  /// [price] - price per share
+  /// [commission] - trading commission
+  /// [tradeDate] - date of trade
+  /// [notes] - optional notes
+  /// Returns created [Trade]
+  Future<Trade> addTrade({
+    required String ticker,
+    required String type,
+    required int quantity,
+    required double price,
+    required double commission,
+    required DateTime tradeDate,
+    String? notes,
+  }) async {
+    try {
+      final response = await _dio.post(
+        '/trades',
+        data: {
+          'ticker': ticker,
+          'type': type,
+          'quantity': quantity,
+          'price': price,
+          'commission': commission,
+          'trade_date': tradeDate.toIso8601String(),
+          'notes': notes,
+        },
+      );
+      if (response.statusCode == 200 || response.statusCode == 201) {
+        return Trade.fromJson(response.data as Map<String, dynamic>);
+      }
+      throw Exception('Failed to add trade');
+    } catch (e) {
+      print('Error adding trade: $e');
+      rethrow;
+    }
+  }
+  
+  /// Delete a trade
+  /// [tradeId] - ID of trade to delete
+  Future<void> deleteTrade(String tradeId) async {
+    try {
+      final response = await _dio.delete('/trades/$tradeId');
+      if (response.statusCode != 200 && response.statusCode != 204) {
+        throw Exception('Failed to delete trade');
+      }
+    } catch (e) {
+      print('Error deleting trade: $e');
+      rethrow;
+    }
+  }
+
   /// Set custom base URL (useful for switching between localhost and production)
   void setBaseUrl(String url) {
     _dio.options.baseUrl = url;

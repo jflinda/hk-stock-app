@@ -23,6 +23,7 @@ CREATE TABLE IF NOT EXISTS watchlist (
     ticker      TEXT NOT NULL UNIQUE,
     name        TEXT,
     alert_price REAL,
+    alert_type  TEXT,
     notes       TEXT,
     added_at    DATETIME DEFAULT CURRENT_TIMESTAMP
 );

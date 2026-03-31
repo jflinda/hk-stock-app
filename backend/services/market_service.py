@@ -69,6 +69,7 @@ class MarketService:
             try:
                 ticker = yf.Ticker(symbol)
                 hist = ticker.history(period="5d")
+                hist = hist.dropna(subset=["Close"])  # Drop NaN price rows
                 
                 if len(hist) == 0:
                     result.append({
@@ -111,6 +112,19 @@ class MarketService:
         return result
     
     @classmethod
+    def get_quote(cls, ticker: str) -> Dict[str, Any]:
+        """Alias for get_stock_quote to simplify usage"""
+        result = cls.get_stock_quote(ticker)
+        # Normalize key names for simpler access
+        return {
+            "name": result.get("name", ""),
+            "price": result.get("price", 0.0),
+            "change": result.get("change", 0.0),
+            "changePct": result.get("change_pct", 0.0),
+            **result,
+        }
+    
+    @classmethod
     def get_stock_quote(cls, ticker: str) -> Dict[str, Any]:
         """Get single stock quote with detailed info"""
         sym = cls._normalize_ticker(ticker)
@@ -121,36 +135,74 @@ class MarketService:
         
         try:
             stock = yf.Ticker(sym)
-            hist = stock.history(period="5d")
+            # Use 5d for current price, 1y for 52-week range
+            hist5d = stock.history(period="5d").dropna(subset=["Close"])
+            hist1y = stock.history(period="1y").dropna(subset=["Close"])
             
-            if len(hist) == 0:
-                raise ValueError(f"No historical data for {sym}")
+            if len(hist5d) == 0:
+                raise ValueError(f"No valid price data for {sym}")
             
-            curr_price = float(hist["Close"].iloc[-1])
-            prev_price = float(hist["Close"].iloc[-2]) if len(hist) >= 2 else curr_price
+            curr_price = float(hist5d["Close"].iloc[-1])
+            prev_price = float(hist5d["Close"].iloc[-2]) if len(hist5d) >= 2 else curr_price
             
             change = curr_price - prev_price
             change_pct = (change / prev_price * 100) if prev_price != 0 else 0
             
+            # Safe extraction with NaN handling
+            def safe_float(val, default=None):
+                try:
+                    f = float(val)
+                    if f != f:  # NaN check
+                        return default
+                    return f
+                except:
+                    return default
+            
             # Get additional info from info dict
             info = stock.info or {}
             
+            # Format market cap as human-readable string
+            raw_cap = safe_float(info.get("marketCap", 0), 0) or 0
+            if raw_cap >= 1e12:
+                market_cap_str = f"HK${raw_cap / 1e12:.2f}T"
+            elif raw_cap >= 1e9:
+                market_cap_str = f"HK${raw_cap / 1e9:.1f}B"
+            elif raw_cap >= 1e6:
+                market_cap_str = f"HK${raw_cap / 1e6:.1f}M"
+            else:
+                market_cap_str = None
+
+            # 52-week range from 1y data
+            high_52w = round(float(hist1y["High"].max()), 2) if len(hist1y) > 0 else None
+            low_52w = round(float(hist1y["Low"].min()), 2) if len(hist1y) > 0 else None
+
+            # Day high/low
+            day_high = round(safe_float(hist5d["High"].iloc[-1]), 2) if safe_float(hist5d["High"].iloc[-1]) else None
+            day_low = round(safe_float(hist5d["Low"].iloc[-1]), 2) if safe_float(hist5d["Low"].iloc[-1]) else None
+
             result = {
                 "ticker": ticker.upper().replace(".HK", ""),
                 "symbol": sym,
-                "name": info.get("longName", ""),
+                "name": info.get("shortName") or info.get("longName", ""),
+                "long_name": info.get("longName"),
                 "price": round(curr_price, 2),
                 "change": round(change, 2),
                 "change_pct": round(change_pct, 2),
-                "open": round(float(hist["Open"].iloc[-1]), 2),
-                "high": round(float(hist["High"].iloc[-1]), 2),
-                "low": round(float(hist["Low"].iloc[-1]), 2),
-                "volume": int(hist["Volume"].iloc[-1]),
-                "high_52w": round(float(hist["High"].max()), 2),
-                "low_52w": round(float(hist["Low"].min()), 2),
-                "pe": round(float(info.get("trailingPE", 0) or 0), 2),
-                "dividend_yield": round(float(info.get("dividendYield", 0) or 0) * 100, 2),
-                "market_cap": info.get("marketCap", 0),
+                "open": round(safe_float(hist5d["Open"].iloc[-1]) or curr_price, 2),
+                "high": day_high,
+                "low": day_low,
+                "day_high": day_high,
+                "day_low": day_low,
+                "volume": int(safe_float(hist5d["Volume"].iloc[-1]) or 0),
+                "high_52w": high_52w,
+                "low_52w": low_52w,
+                "pe": round(safe_float(info.get("trailingPE")) or 0, 2) or None,
+                "dividend_yield": round((safe_float(info.get("dividendYield")) or 0), 2) or None,
+                "market_cap": market_cap_str,
+                "sector": info.get("sector"),
+                "industry": info.get("industry"),
+                "country": info.get("country"),
+                "currency": info.get("currency", "HKD"),
             }
             
             cls._set_cache(cache_key, result)
