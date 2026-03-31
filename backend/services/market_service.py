@@ -1,0 +1,271 @@
+"""Market data service with caching"""
+import yfinance as yf
+import pandas as pd
+from datetime import datetime, timedelta
+from typing import Dict, List, Any
+import logging
+
+logger = logging.getLogger(__name__)
+
+# Simple in-memory cache
+_cache: Dict[str, Dict[str, Any]] = {}
+CACHE_TTL = 300  # 5 minutes
+
+class MarketService:
+    """Service for fetching market data via yfinance"""
+    
+    INDICES = {
+        "HSI":    "^HSI",
+        "HSCEI":  "^HSCE",
+        "HSTI":   "^HSTI",
+        "SP500":  "^GSPC",
+        "SSE":    "000001.SS",
+    }
+    
+    SECTORS = {
+        "Real Estate":    ["0016.HK", "1928.HK", "0688.HK"],
+        "Finance":        ["2318.HK", "3968.HK", "6030.HK"],
+        "Utilities":      ["0002.HK", "0003.HK", "0836.HK"],
+        "Properties":     ["1113.HK", "0027.HK", "1444.HK"],
+        "Energy":         ["0883.HK", "0857.HK", "0386.HK"],
+        "Materials":      ["1088.HK", "0347.HK", "2333.HK"],
+        "Industrials":    ["0384.HK", "1211.HK", "0291.HK"],
+        "Consumer":       ["0700.HK", "9988.HK", "3690.HK"],
+    }
+    
+    @staticmethod
+    def _is_cache_valid(key: str) -> bool:
+        """Check if cache entry is still valid"""
+        if key not in _cache:
+            return False
+        entry = _cache[key]
+        if "timestamp" not in entry:
+            return False
+        age = (datetime.now() - entry["timestamp"]).total_seconds()
+        return age < CACHE_TTL
+    
+    @staticmethod
+    def _get_cached(key: str) -> Any:
+        """Get cached value if valid"""
+        if MarketService._is_cache_valid(key):
+            return _cache[key]["data"]
+        return None
+    
+    @staticmethod
+    def _set_cache(key: str, data: Any):
+        """Set cache value with timestamp"""
+        _cache[key] = {"data": data, "timestamp": datetime.now()}
+    
+    @classmethod
+    def get_indices(cls) -> List[Dict[str, Any]]:
+        """Get all major indices with price and change percentage"""
+        cache_key = "indices_all"
+        cached = cls._get_cached(cache_key)
+        if cached:
+            return cached
+        
+        result = []
+        for name, symbol in cls.INDICES.items():
+            try:
+                ticker = yf.Ticker(symbol)
+                hist = ticker.history(period="5d")
+                
+                if len(hist) == 0:
+                    result.append({
+                        "name": name,
+                        "symbol": symbol,
+                        "price": 0,
+                        "change": 0,
+                        "change_pct": 0,
+                        "timestamp": None,
+                        "error": "No data available"
+                    })
+                    continue
+                
+                curr_price = float(hist["Close"].iloc[-1])
+                prev_price = float(hist["Close"].iloc[-2]) if len(hist) >= 2 else curr_price
+                change = curr_price - prev_price
+                change_pct = (change / prev_price * 100) if prev_price != 0 else 0
+                
+                result.append({
+                    "name": name,
+                    "symbol": symbol,
+                    "price": round(curr_price, 2),
+                    "change": round(change, 2),
+                    "change_pct": round(change_pct, 2),
+                    "timestamp": str(hist.index[-1]),
+                })
+            except Exception as e:
+                logger.error(f"Error fetching {name} ({symbol}): {str(e)}")
+                result.append({
+                    "name": name,
+                    "symbol": symbol,
+                    "price": 0,
+                    "change": 0,
+                    "change_pct": 0,
+                    "timestamp": None,
+                    "error": str(e)
+                })
+        
+        cls._set_cache(cache_key, result)
+        return result
+    
+    @classmethod
+    def get_stock_quote(cls, ticker: str) -> Dict[str, Any]:
+        """Get single stock quote with detailed info"""
+        sym = cls._normalize_ticker(ticker)
+        cache_key = f"quote_{sym}"
+        cached = cls._get_cached(cache_key)
+        if cached:
+            return cached
+        
+        try:
+            stock = yf.Ticker(sym)
+            hist = stock.history(period="5d")
+            
+            if len(hist) == 0:
+                raise ValueError(f"No historical data for {sym}")
+            
+            curr_price = float(hist["Close"].iloc[-1])
+            prev_price = float(hist["Close"].iloc[-2]) if len(hist) >= 2 else curr_price
+            
+            change = curr_price - prev_price
+            change_pct = (change / prev_price * 100) if prev_price != 0 else 0
+            
+            # Get additional info from info dict
+            info = stock.info or {}
+            
+            result = {
+                "ticker": ticker.upper().replace(".HK", ""),
+                "symbol": sym,
+                "name": info.get("longName", ""),
+                "price": round(curr_price, 2),
+                "change": round(change, 2),
+                "change_pct": round(change_pct, 2),
+                "open": round(float(hist["Open"].iloc[-1]), 2),
+                "high": round(float(hist["High"].iloc[-1]), 2),
+                "low": round(float(hist["Low"].iloc[-1]), 2),
+                "volume": int(hist["Volume"].iloc[-1]),
+                "high_52w": round(float(hist["High"].max()), 2),
+                "low_52w": round(float(hist["Low"].min()), 2),
+                "pe": round(float(info.get("trailingPE", 0) or 0), 2),
+                "dividend_yield": round(float(info.get("dividendYield", 0) or 0) * 100, 2),
+                "market_cap": info.get("marketCap", 0),
+            }
+            
+            cls._set_cache(cache_key, result)
+            return result
+        except Exception as e:
+            logger.error(f"Error fetching quote for {sym}: {str(e)}")
+            raise
+    
+    @classmethod
+    def get_stock_history(cls, ticker: str, period: str = "1mo") -> List[Dict[str, Any]]:
+        """Get OHLCV history with moving averages"""
+        sym = cls._normalize_ticker(ticker)
+        cache_key = f"history_{sym}_{period}"
+        cached = cls._get_cached(cache_key)
+        if cached:
+            return cached
+        
+        try:
+            # Map period strings to yfinance format
+            period_map = {
+                "1d": "5d",
+                "5d": "1mo",
+                "1m": "3mo",
+                "1mo": "3mo",
+                "3m": "1y",
+                "3mo": "1y",
+                "1y": "1y",
+            }
+            yf_period = period_map.get(period.lower(), "1mo")
+            
+            hist = yf.Ticker(sym).history(period=yf_period)
+            
+            if len(hist) == 0:
+                raise ValueError(f"No historical data for {sym}")
+            
+            # Calculate moving averages
+            hist["MA5"] = hist["Close"].rolling(window=5).mean()
+            hist["MA20"] = hist["Close"].rolling(window=20).mean()
+            
+            records = []
+            for date, row in hist.iterrows():
+                records.append({
+                    "date": str(date.date()),
+                    "timestamp": int(date.timestamp() * 1000),  # milliseconds
+                    "open": round(float(row["Open"]), 2),
+                    "high": round(float(row["High"]), 2),
+                    "low": round(float(row["Low"]), 2),
+                    "close": round(float(row["Close"]), 2),
+                    "volume": int(row["Volume"]),
+                    "ma5": round(float(row["MA5"]), 2) if not pd.isna(row["MA5"]) else None,
+                    "ma20": round(float(row["MA20"]), 2) if not pd.isna(row["MA20"]) else None,
+                })
+            
+            cls._set_cache(cache_key, records)
+            return records
+        except Exception as e:
+            logger.error(f"Error fetching history for {sym}: {str(e)}")
+            raise
+    
+    @classmethod
+    def get_movers(cls) -> Dict[str, List[Dict[str, Any]]]:
+        """Get top gainers, losers, and volume"""
+        cache_key = "movers_all"
+        cached = cls._get_cached(cache_key)
+        if cached:
+            return cached
+        
+        # Liquid HK stocks for ranking
+        tickers = [
+            "0700.HK", "9988.HK", "3690.HK", "2318.HK", "0883.HK",
+            "1299.HK", "0016.HK", "0941.HK", "2628.HK", "0386.HK",
+            "1088.HK", "0857.HK", "9618.HK", "2015.HK", "9868.HK",
+            "9863.HK", "0981.HK", "9961.HK", "1024.HK", "0939.HK",
+        ]
+        
+        movers = []
+        for sym in tickers:
+            try:
+                ticker = yf.Ticker(sym)
+                hist = ticker.history(period="5d")
+                
+                if len(hist) < 2:
+                    continue
+                
+                curr_price = float(hist["Close"].iloc[-1])
+                prev_price = float(hist["Close"].iloc[-2])
+                change_pct = (curr_price - prev_price) / prev_price * 100
+                volume = int(hist["Volume"].iloc[-1])
+                
+                movers.append({
+                    "ticker": sym.replace(".HK", ""),
+                    "symbol": sym,
+                    "price": round(curr_price, 2),
+                    "change_pct": round(change_pct, 2),
+                    "volume": volume,
+                })
+            except Exception as e:
+                logger.warning(f"Error fetching {sym}: {str(e)}")
+                continue
+        
+        gainers = sorted(movers, key=lambda x: x["change_pct"], reverse=True)[:5]
+        losers = sorted(movers, key=lambda x: x["change_pct"])[:5]
+        turnover = sorted(movers, key=lambda x: x["volume"], reverse=True)[:5]
+        
+        result = {
+            "gainers": gainers,
+            "losers": losers,
+            "turnover": turnover,
+        }
+        
+        cls._set_cache(cache_key, result)
+        return result
+    
+    @staticmethod
+    def _normalize_ticker(ticker: str) -> str:
+        """Normalize ticker to Yahoo Finance HK format, e.g. '700' -> '0700.HK'"""
+        t = ticker.upper().replace(".HK", "")
+        return t.zfill(4) + ".HK"
