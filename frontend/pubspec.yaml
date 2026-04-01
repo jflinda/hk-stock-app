@@ -51,6 +51,12 @@ dependencies:
   # Charts (K-line visualization)
   fl_chart: ^0.64.0
 
+  # Local push notifications (price alerts, daily summary)
+  flutter_local_notifications: ^17.0.0
+
+  # File system access for CSV export
+  path_provider: ^2.1.1
+
 dev_dependencies:
   flutter_test:
     sdk: flutter

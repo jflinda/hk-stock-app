@@ -108,3 +108,8 @@ class NewTradeFormNotifier extends StateNotifier<NewTradeFormState> {
     state = NewTradeFormState();
   }
 }
+
+/// Provider for portfolio performance review data (7 submodules)
+final performanceProvider = FutureProvider<Map<String, dynamic>>((ref) async {
+  return apiService.getPortfolioPerformance();
+});

@@ -1,4 +1,11 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
+    <!-- Notification permissions (Android 13+) -->
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
+    <!-- Exact alarm for scheduled daily summary (Android 12+) -->
+    <uses-permission android:name="android.permission.SCHEDULE_EXACT_ALARM" />
+    <!-- Internet access for API calls -->
+    <uses-permission android:name="android.permission.INTERNET" />
+
     <application
         android:label="hk_stock_app"
         android:name="${applicationName}"

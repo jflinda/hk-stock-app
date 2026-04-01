@@ -378,6 +378,37 @@ class ApiService {
     }
   }
 
+  /// Get portfolio performance review data (7 submodules)
+  Future<Map<String, dynamic>> getPortfolioPerformance() async {
+    try {
+      final response = await _dio.get('/portfolio/performance');
+      if (response.statusCode == 200) {
+        return response.data as Map<String, dynamic>;
+      }
+      throw Exception('Failed to load performance data');
+    } catch (e) {
+      print('Error fetching performance: $e');
+      rethrow;
+    }
+  }
+
+  /// Export all trades as a CSV string
+  Future<String> exportTradesCSV() async {
+    try {
+      final response = await _dio.get(
+        '/trades/export/csv',
+        options: Options(responseType: ResponseType.plain),
+      );
+      if (response.statusCode == 200) {
+        return response.data as String;
+      }
+      throw Exception('Failed to export trades');
+    } catch (e) {
+      print('Error exporting trades CSV: $e');
+      rethrow;
+    }
+  }
+
   /// Set custom base URL (useful for switching between localhost and production)
   void setBaseUrl(String url) {
     _dio.options.baseUrl = url;

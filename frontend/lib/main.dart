@@ -11,10 +11,15 @@ import 'package:hk_stock_app/screens/watchlist/watchlist_screen.dart';
 import 'package:hk_stock_app/screens/tools/tools_screen.dart';
 import 'package:hk_stock_app/screens/settings/settings_screen.dart';
 import 'package:hk_stock_app/services/api_service.dart';
+import 'package:hk_stock_app/services/notification_service.dart';
+import 'package:hk_stock_app/services/price_alert_checker.dart';
 
-void main() {
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
   // Use real backend API (backend must be running on localhost:8000)
   apiService.setMockMode(false);
+  // Initialise local notifications (price alerts, daily summary)
+  await NotificationService.instance.init();
 
   runApp(const ProviderScope(child: HKStockApp()));
 }
@@ -131,6 +136,12 @@ class _MainAppState extends ConsumerState<MainApp> {
     // Refresh portfolio positions
     ref.invalidate(portfolioSummaryProvider);
     ref.invalidate(positionsProvider);
+
+    // Check price alerts against updated watchlist data
+    final watchlistAsync = ref.read(watchlistProvider);
+    watchlistAsync.whenData((items) async {
+      await PriceAlertChecker.instance.check(items);
+    });
   }
 
   @override

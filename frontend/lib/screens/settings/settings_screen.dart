@@ -1,5 +1,8 @@
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:hk_stock_app/constants/index.dart';
+import 'package:hk_stock_app/services/api_service.dart';
+import 'package:path_provider/path_provider.dart';
 
 /// Settings Screen - User preferences and configuration
 class SettingsScreen extends StatefulWidget {
@@ -16,6 +19,43 @@ class _SettingsScreenState extends State<SettingsScreen> {
   bool priceAlert = true;
   bool pnlUpdate = true;
   bool newsNotification = false;
+  bool _exportingCSV = false;
+
+  // ── CSV Export ──────────────────────────────────────────────────────────────
+  Future<void> _exportCSV() async {
+    setState(() => _exportingCSV = true);
+    try {
+      final csvData = await apiService.exportTradesCSV();
+
+      // Save to app documents directory (always accessible without special permissions)
+      final dir = await getApplicationDocumentsDirectory();
+      final fileName =
+          'hk_trades_${DateTime.now().toIso8601String().substring(0, 10)}.csv';
+      final file = File('${dir.path}/$fileName');
+      await file.writeAsString(csvData);
+
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Exported to ${file.path}'),
+            duration: const Duration(seconds: 4),
+            backgroundColor: Colors.green.withOpacity(0.85),
+          ),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Export failed: $e'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    } finally {
+      if (mounted) setState(() => _exportingCSV = false);
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -124,10 +164,14 @@ class _SettingsScreenState extends State<SettingsScreen> {
               _SettingTile(
                 title: 'Export Data',
                 subtitle: 'Download all trades as CSV',
-                trailing: const Icon(Icons.download, color: AppColors.accentBlue),
-                onTap: () => ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text('Data exported to Downloads')),
-                ),
+                trailing: _exportingCSV
+                    ? const SizedBox(
+                        width: 20,
+                        height: 20,
+                        child: CircularProgressIndicator(strokeWidth: 2),
+                      )
+                    : const Icon(Icons.download, color: AppColors.accentBlue),
+                onTap: _exportingCSV ? null : _exportCSV,
               ),
               _SettingTile(
                 title: 'Backup',

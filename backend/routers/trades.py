@@ -1,13 +1,18 @@
 """Trade records CRUD router"""
 from fastapi import APIRouter, HTTPException
+from fastapi.responses import StreamingResponse
 from pydantic import BaseModel
 from typing import Optional, List, Dict, Any
 from datetime import datetime
 import sqlite3
+import csv
+import io
 import os
+from services.market_service import MarketService
 
 router = APIRouter()
 DB_PATH = os.path.join(os.path.dirname(__file__), "..", "database", "hkstock.db")
+_market_service = MarketService()
 
 def get_db():
     conn = sqlite3.connect(DB_PATH)
@@ -65,13 +70,24 @@ def add_trade(trade: TradeRequest) -> Dict[str, Any]:
     except ValueError:
         raise HTTPException(status_code=400, detail="Invalid trade_date format")
     
+    # Resolve the real company name from market data
+    ticker_upper = trade.ticker.upper()
+    company_name = ticker_upper  # default fallback
+    try:
+        quote = _market_service.get_quote(ticker_upper)
+        resolved_name = quote.get("name") or quote.get("longName") or ticker_upper
+        if resolved_name and resolved_name != ticker_upper:
+            company_name = resolved_name
+    except Exception:
+        pass  # Keep fallback; don't block trade entry on market data failure
+
     with get_db() as conn:
         cursor = conn.execute(
             """INSERT INTO trades (ticker, name, direction, qty, price, fee, trade_date, notes) 
                VALUES (?, ?, ?, ?, ?, ?, ?, ?)""",
             (
-                trade.ticker.upper(),
-                trade.ticker.upper(),  # Will be overwritten with name from market service
+                ticker_upper,
+                company_name,
                 trade.type,
                 trade.quantity,
                 trade.price,
@@ -85,8 +101,8 @@ def add_trade(trade: TradeRequest) -> Dict[str, Any]:
     
     return {
         "id": str(new_id),
-        "ticker": trade.ticker.upper(),
-        "name": trade.ticker.upper(),
+        "ticker": ticker_upper,
+        "name": company_name,
         "type": trade.type,
         "quantity": trade.quantity,
         "price": trade.price,
@@ -106,3 +122,42 @@ def delete_trade(trade_id: int) -> Dict[str, str]:
         if cursor.rowcount == 0:
             raise HTTPException(status_code=404, detail="Trade not found")
     return {"status": "deleted", "id": str(trade_id)}
+
+
+@router.get("/export/csv")
+def export_trades_csv():
+    """Export all trades as a downloadable CSV file"""
+    with get_db() as conn:
+        rows = conn.execute(
+            "SELECT * FROM trades ORDER BY trade_date DESC"
+        ).fetchall()
+
+    output = io.StringIO()
+    writer = csv.writer(output)
+    # Header row
+    writer.writerow([
+        "ID", "Date", "Ticker", "Name", "Direction",
+        "Qty", "Price (HKD)", "Commission (HKD)",
+        "Total Value (HKD)", "Notes"
+    ])
+    for r in rows:
+        writer.writerow([
+            r["id"],
+            r["trade_date"],
+            r["ticker"],
+            r["name"] or r["ticker"],
+            r["direction"],
+            r["qty"],
+            f"{float(r['price']):.4f}",
+            f"{float(r['fee']):.2f}",
+            f"{float(r['price']) * int(r['qty']):.2f}",
+            r["notes"] or "",
+        ])
+
+    output.seek(0)
+    filename = f"hk_trades_{datetime.now().strftime('%Y%m%d')}.csv"
+    return StreamingResponse(
+        iter([output.getvalue()]),
+        media_type="text/csv",
+        headers={"Content-Disposition": f'attachment; filename="{filename}"'},
+    )

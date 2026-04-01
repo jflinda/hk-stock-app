@@ -52,65 +52,129 @@ class _ToolsScreenState extends State<ToolsScreen> with SingleTickerProviderStat
   }
 }
 
+// ─────────────────────────────────────────
+// Position Sizer
+// ─────────────────────────────────────────
 class _PositionSizer extends StatefulWidget {
   @override
   State<_PositionSizer> createState() => _PositionSizerState();
 }
 
 class _PositionSizerState extends State<_PositionSizer> {
-  final portfolioValueCtrl = TextEditingController(text: '100000');
+  final _formKey = GlobalKey<FormState>();
+  final portfolioValueCtrl = TextEditingController(text: '500000');
   final riskPctCtrl = TextEditingController(text: '2');
   final entryPriceCtrl = TextEditingController(text: '250');
   final stopLossCtrl = TextEditingController(text: '240');
+
+  // Result state
+  int? _suggestedShares;
+  double? _positionValue;
+  double? _riskAmount;
+  double? _riskPerShare;
+  double? _portfolioWeight;
+  String? _errorMsg;
+
+  void _calculatePosition() {
+    if (!_formKey.currentState!.validate()) return;
+
+    final portfolioValue = double.tryParse(portfolioValueCtrl.text) ?? 0;
+    final riskPct = double.tryParse(riskPctCtrl.text) ?? 0;
+    final entryPrice = double.tryParse(entryPriceCtrl.text) ?? 0;
+    final stopLoss = double.tryParse(stopLossCtrl.text) ?? 0;
+
+    if (entryPrice <= stopLoss) {
+      setState(() {
+        _errorMsg = 'Entry price must be greater than stop loss';
+        _suggestedShares = null;
+      });
+      return;
+    }
+
+    final riskAmount = portfolioValue * (riskPct / 100);
+    final riskPerShare = entryPrice - stopLoss;
+    // Round down to nearest lot (100 shares for HK stocks)
+    final rawShares = (riskAmount / riskPerShare).floor();
+    final suggestedShares = (rawShares ~/ 100) * 100;
+    final positionValue = suggestedShares * entryPrice;
+    final portfolioWeight = (positionValue / portfolioValue) * 100;
+
+    setState(() {
+      _errorMsg = null;
+      _suggestedShares = suggestedShares;
+      _riskAmount = riskAmount;
+      _riskPerShare = riskPerShare;
+      _positionValue = positionValue;
+      _portfolioWeight = portfolioWeight;
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
     return SingleChildScrollView(
       padding: const EdgeInsets.all(16),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          _InputField('Portfolio Value (HK\$)', portfolioValueCtrl),
-          _InputField('Risk %', riskPctCtrl),
-          _InputField('Entry Price (HK\$)', entryPriceCtrl),
-          _InputField('Stop Loss (HK\$)', stopLossCtrl),
-          const SizedBox(height: 24),
-          ElevatedButton(
-            onPressed: _calculatePosition,
-            style: ElevatedButton.styleFrom(
-              backgroundColor: AppColors.accentBlue,
-              minimumSize: const Size.fromHeight(48),
+      child: Form(
+        key: _formKey,
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            _ValidatedField(
+              label: 'Portfolio Value (HK\$)',
+              controller: portfolioValueCtrl,
+              validator: (v) => (double.tryParse(v ?? '') ?? 0) <= 0 ? 'Enter a valid amount' : null,
             ),
-            child: const Text('Calculate Position Size'),
-          ),
-          const SizedBox(height: 16),
-          Container(
-            padding: const EdgeInsets.all(16),
-            decoration: BoxDecoration(
-              color: AppColors.cardBg,
-              borderRadius: BorderRadius.circular(8),
-              border: Border.all(color: AppColors.borderColor),
+            _ValidatedField(
+              label: 'Risk % per Trade',
+              controller: riskPctCtrl,
+              validator: (v) {
+                final d = double.tryParse(v ?? '');
+                if (d == null || d <= 0 || d > 100) return 'Enter 0.1 – 100';
+                return null;
+              },
             ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const Text('Results', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14)),
-                const Divider(),
-                _ResultRow('Suggested Shares', '816 shares'),
-                _ResultRow('Position Value', 'HK\$204,000'),
-                _ResultRow('Risk Amount', 'HK\$2,000'),
-                _ResultRow('Risk per Share', 'HK\$2.45'),
-              ],
+            _ValidatedField(
+              label: 'Entry Price (HK\$)',
+              controller: entryPriceCtrl,
+              validator: (v) => (double.tryParse(v ?? '') ?? 0) <= 0 ? 'Enter a valid price' : null,
             ),
-          ),
-        ],
+            _ValidatedField(
+              label: 'Stop Loss Price (HK\$)',
+              controller: stopLossCtrl,
+              validator: (v) => (double.tryParse(v ?? '') ?? 0) <= 0 ? 'Enter a valid price' : null,
+            ),
+            if (_errorMsg != null)
+              Padding(
+                padding: const EdgeInsets.only(bottom: 8),
+                child: Text(_errorMsg!, style: const TextStyle(color: Colors.redAccent, fontSize: 12)),
+              ),
+            const SizedBox(height: 8),
+            ElevatedButton.icon(
+              onPressed: _calculatePosition,
+              icon: const Icon(Icons.calculate_outlined, size: 18),
+              label: const Text('Calculate Position Size'),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: AppColors.accentBlue,
+                minimumSize: const Size.fromHeight(48),
+              ),
+            ),
+            const SizedBox(height: 16),
+            _ResultCard(
+              title: 'Position Sizing Results',
+              children: _suggestedShares == null
+                  ? [const _EmptyResult()]
+                  : [
+                      _ResultRow('Suggested Shares', '${_formatInt(_suggestedShares!)} shares',
+                          textColor: AppColors.upColor),
+                      _ResultRow('Position Value', 'HK\$${_formatMoney(_positionValue!)}'),
+                      _ResultRow('Portfolio Weight', '${_portfolioWeight!.toStringAsFixed(1)}%'),
+                      _ResultRow('Risk Amount', 'HK\$${_formatMoney(_riskAmount!)}',
+                          textColor: Colors.orangeAccent),
+                      _ResultRow('Risk per Share', 'HK\$${_positionValue! > 0 ? _formatMoney(_riskPerShare!) : "—"}'),
+                    ],
+            ),
+          ],
+        ),
       ),
-    );
-  }
-
-  void _calculatePosition() {
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Position size calculated')),
     );
   }
 
@@ -124,64 +188,129 @@ class _PositionSizerState extends State<_PositionSizer> {
   }
 }
 
+// ─────────────────────────────────────────
+// P&L Calculator
+// ─────────────────────────────────────────
 class _PnLCalculator extends StatefulWidget {
   @override
   State<_PnLCalculator> createState() => _PnLCalculatorState();
 }
 
 class _PnLCalculatorState extends State<_PnLCalculator> {
+  final _formKey = GlobalKey<FormState>();
   final buyPriceCtrl = TextEditingController(text: '250');
   final sellPriceCtrl = TextEditingController(text: '265');
   final sharesCtrl = TextEditingController(text: '1000');
-  final feeCtrl = TextEditingController(text: '100');
+  final buyFeeCtrl = TextEditingController(text: '100');
+  final sellFeeCtrl = TextEditingController(text: '100');
+
+  // Result state
+  double? _grossProfit;
+  double? _netProfit;
+  double? _returnPct;
+  double? _totalCost;
+  double? _totalRevenue;
+  bool? _isProfit;
+
+  void _calculatePnL() {
+    if (!_formKey.currentState!.validate()) return;
+
+    final buyPrice = double.parse(buyPriceCtrl.text);
+    final sellPrice = double.parse(sellPriceCtrl.text);
+    final shares = double.parse(sharesCtrl.text);
+    final buyFee = double.tryParse(buyFeeCtrl.text) ?? 0;
+    final sellFee = double.tryParse(sellFeeCtrl.text) ?? 0;
+
+    final totalCost = buyPrice * shares + buyFee;
+    final totalRevenue = sellPrice * shares - sellFee;
+    final grossProfit = (sellPrice - buyPrice) * shares;
+    final netProfit = totalRevenue - (buyPrice * shares + buyFee);
+    final returnPct = (netProfit / totalCost) * 100;
+
+    setState(() {
+      _grossProfit = grossProfit;
+      _netProfit = netProfit;
+      _returnPct = returnPct;
+      _totalCost = totalCost;
+      _totalRevenue = totalRevenue;
+      _isProfit = netProfit >= 0;
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
+    final profitColor = (_isProfit ?? true) ? AppColors.upColor : AppColors.downColor;
+
     return SingleChildScrollView(
       padding: const EdgeInsets.all(16),
-      child: Column(
-        children: [
-          _InputField('Buy Price (HK\$)', buyPriceCtrl),
-          _InputField('Sell Price (HK\$)', sellPriceCtrl),
-          _InputField('Shares', sharesCtrl),
-          _InputField('Commission (HK\$)', feeCtrl),
-          const SizedBox(height: 24),
-          ElevatedButton(
-            onPressed: _calculatePnL,
-            style: ElevatedButton.styleFrom(
-              backgroundColor: AppColors.accentBlue,
-              minimumSize: const Size.fromHeight(48),
+      child: Form(
+        key: _formKey,
+        child: Column(
+          children: [
+            _ValidatedField(
+              label: 'Buy Price (HK\$)',
+              controller: buyPriceCtrl,
+              validator: (v) => (double.tryParse(v ?? '') ?? 0) <= 0 ? 'Enter a valid price' : null,
             ),
-            child: const Text('Calculate P&L'),
-          ),
-          const SizedBox(height: 16),
-          Container(
-            padding: const EdgeInsets.all(16),
-            decoration: BoxDecoration(
-              color: AppColors.cardBg,
-              borderRadius: BorderRadius.circular(8),
-              border: Border.all(color: AppColors.borderColor),
+            _ValidatedField(
+              label: 'Sell Price (HK\$)',
+              controller: sellPriceCtrl,
+              validator: (v) => (double.tryParse(v ?? '') ?? 0) <= 0 ? 'Enter a valid price' : null,
             ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const Text('P&L Results', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14)),
-                const Divider(),
-                _ResultRow('Gross Profit', 'HK\$15,000', textColor: AppColors.upColor),
-                _ResultRow('Net Profit', 'HK\$14,900', textColor: AppColors.upColor),
-                _ResultRow('Return %', '+5.96%', textColor: AppColors.upColor),
-                _ResultRow('Avg Cost', 'HK\$250.10'),
-              ],
+            _ValidatedField(
+              label: 'Number of Shares',
+              controller: sharesCtrl,
+              validator: (v) => (double.tryParse(v ?? '') ?? 0) <= 0 ? 'Enter valid quantity' : null,
             ),
-          ),
-        ],
+            _ValidatedField(
+              label: 'Buy Commission (HK\$)',
+              controller: buyFeeCtrl,
+              validator: (v) => (double.tryParse(v ?? '')) == null ? 'Enter a number' : null,
+            ),
+            _ValidatedField(
+              label: 'Sell Commission (HK\$)',
+              controller: sellFeeCtrl,
+              validator: (v) => (double.tryParse(v ?? '')) == null ? 'Enter a number' : null,
+            ),
+            const SizedBox(height: 8),
+            ElevatedButton.icon(
+              onPressed: _calculatePnL,
+              icon: const Icon(Icons.show_chart, size: 18),
+              label: const Text('Calculate P&L'),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: AppColors.accentBlue,
+                minimumSize: const Size.fromHeight(48),
+              ),
+            ),
+            const SizedBox(height: 16),
+            _ResultCard(
+              title: 'P&L Results',
+              children: _netProfit == null
+                  ? [const _EmptyResult()]
+                  : [
+                      _ResultRow(
+                        'Gross Profit',
+                        '${_grossProfit! >= 0 ? "+" : ""}HK\$${_formatMoney(_grossProfit!.abs())}',
+                        textColor: _grossProfit! >= 0 ? AppColors.upColor : AppColors.downColor,
+                      ),
+                      _ResultRow(
+                        'Net Profit',
+                        '${_netProfit! >= 0 ? "+" : "-"}HK\$${_formatMoney(_netProfit!.abs())}',
+                        textColor: profitColor,
+                      ),
+                      _ResultRow(
+                        'Return %',
+                        '${_returnPct! >= 0 ? "+" : ""}${_returnPct!.toStringAsFixed(2)}%',
+                        textColor: profitColor,
+                      ),
+                      const Divider(height: 16),
+                      _ResultRow('Total Cost', 'HK\$${_formatMoney(_totalCost!)}'),
+                      _ResultRow('Total Revenue', 'HK\$${_formatMoney(_totalRevenue!)}'),
+                    ],
+            ),
+          ],
+        ),
       ),
-    );
-  }
-
-  void _calculatePnL() {
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('P&L calculated')),
     );
   }
 
@@ -190,11 +319,15 @@ class _PnLCalculatorState extends State<_PnLCalculator> {
     buyPriceCtrl.dispose();
     sellPriceCtrl.dispose();
     sharesCtrl.dispose();
-    feeCtrl.dispose();
+    buyFeeCtrl.dispose();
+    sellFeeCtrl.dispose();
     super.dispose();
   }
 }
 
+// ─────────────────────────────────────────
+// Currency Converter
+// ─────────────────────────────────────────
 class _CurrencyConverter extends StatefulWidget {
   @override
   State<_CurrencyConverter> createState() => _CurrencyConverterState();
@@ -205,14 +338,32 @@ class _CurrencyConverterState extends State<_CurrencyConverter> {
   String fromCurrency = 'HKD';
   String toCurrency = 'USD';
 
-  final rates = {
+  // Rates relative to HKD base
+  final Map<String, double> rates = {
     'HKD': 1.0,
-    'USD': 0.128,
-    'CNY': 0.93,
-    'EUR': 0.117,
-    'GBP': 0.102,
-    'JPY': 19.2,
+    'USD': 0.1282,
+    'CNY': 0.9302,
+    'EUR': 0.1169,
+    'GBP': 0.1013,
+    'JPY': 19.24,
+    'SGD': 0.1721,
+    'AUD': 0.1962,
   };
+
+  String get _convertedAmount {
+    try {
+      final amount = double.parse(amountCtrl.text);
+      final rate = (rates[toCurrency] ?? 1) / (rates[fromCurrency] ?? 1);
+      return (amount * rate).toStringAsFixed(2);
+    } catch (e) {
+      return '—';
+    }
+  }
+
+  String get _rateDisplay {
+    final rate = (rates[toCurrency] ?? 1) / (rates[fromCurrency] ?? 1);
+    return '1 $fromCurrency = ${rate.toStringAsFixed(4)} $toCurrency';
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -222,6 +373,7 @@ class _CurrencyConverterState extends State<_CurrencyConverter> {
         children: [
           TextField(
             controller: amountCtrl,
+            onChanged: (_) => setState(() {}),
             decoration: InputDecoration(
               labelText: 'Amount',
               filled: true,
@@ -231,19 +383,20 @@ class _CurrencyConverterState extends State<_CurrencyConverter> {
                 borderSide: const BorderSide(color: AppColors.borderColor),
               ),
             ),
-            keyboardType: TextInputType.number,
+            keyboardType: const TextInputType.numberWithOptions(decimal: true),
           ),
           const SizedBox(height: 16),
           Row(
             children: [
               Expanded(
-                child: DropdownButtonFormField(
+                child: DropdownButtonFormField<String>(
                   value: fromCurrency,
                   items: rates.keys
-                      .map((curr) => DropdownMenuItem(value: curr, child: Text(curr)))
+                      .map((c) => DropdownMenuItem(value: c, child: Text(c)))
                       .toList(),
-                  onChanged: (value) => setState(() => fromCurrency = value!),
+                  onChanged: (v) => setState(() => fromCurrency = v!),
                   decoration: InputDecoration(
+                    labelText: 'From',
                     filled: true,
                     fillColor: AppColors.cardBg,
                     border: OutlineInputBorder(
@@ -253,24 +406,31 @@ class _CurrencyConverterState extends State<_CurrencyConverter> {
                   ),
                 ),
               ),
-              const SizedBox(width: 12),
-              IconButton(
-                icon: const Icon(Icons.swap_horiz),
-                onPressed: () => setState(() {
-                  final temp = fromCurrency;
-                  fromCurrency = toCurrency;
-                  toCurrency = temp;
-                }),
+              const SizedBox(width: 8),
+              Container(
+                decoration: const BoxDecoration(
+                  color: AppColors.cardBg,
+                  shape: BoxShape.circle,
+                ),
+                child: IconButton(
+                  icon: const Icon(Icons.swap_horiz, color: AppColors.accentBlue),
+                  onPressed: () => setState(() {
+                    final tmp = fromCurrency;
+                    fromCurrency = toCurrency;
+                    toCurrency = tmp;
+                  }),
+                ),
               ),
-              const SizedBox(width: 12),
+              const SizedBox(width: 8),
               Expanded(
-                child: DropdownButtonFormField(
+                child: DropdownButtonFormField<String>(
                   value: toCurrency,
                   items: rates.keys
-                      .map((curr) => DropdownMenuItem(value: curr, child: Text(curr)))
+                      .map((c) => DropdownMenuItem(value: c, child: Text(c)))
                       .toList(),
-                  onChanged: (value) => setState(() => toCurrency = value!),
+                  onChanged: (v) => setState(() => toCurrency = v!),
                   decoration: InputDecoration(
+                    labelText: 'To',
                     filled: true,
                     fillColor: AppColors.cardBg,
                     border: OutlineInputBorder(
@@ -284,42 +444,45 @@ class _CurrencyConverterState extends State<_CurrencyConverter> {
           ),
           const SizedBox(height: 24),
           Container(
-            padding: const EdgeInsets.all(16),
+            width: double.infinity,
+            padding: const EdgeInsets.all(20),
             decoration: BoxDecoration(
               color: AppColors.cardBg,
-              borderRadius: BorderRadius.circular(8),
-              border: Border.all(color: AppColors.borderColor),
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(color: AppColors.accentBlue.withOpacity(0.4)),
             ),
             child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const Text('Converted Amount', style: TextStyle(fontSize: 12, color: Colors.grey)),
-                const SizedBox(height: 8),
                 Text(
-                  _convertCurrency(),
-                  style: const TextStyle(fontSize: 28, fontWeight: FontWeight.bold),
+                  _convertedAmount,
+                  style: const TextStyle(fontSize: 36, fontWeight: FontWeight.bold),
                 ),
-                const SizedBox(height: 8),
+                const SizedBox(height: 4),
                 Text(
-                  '${amountCtrl.text} $fromCurrency = ${_convertCurrency()} $toCurrency',
+                  toCurrency,
+                  style: const TextStyle(fontSize: 14, color: Colors.grey),
+                ),
+                const Divider(height: 24),
+                Text(
+                  _rateDisplay,
                   style: const TextStyle(fontSize: 12, color: Colors.grey),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  '${amountCtrl.text.isEmpty ? "0" : amountCtrl.text} $fromCurrency = $_convertedAmount $toCurrency',
+                  style: TextStyle(fontSize: 11, color: Colors.grey.withOpacity(0.6)),
                 ),
               ],
             ),
           ),
+          const SizedBox(height: 12),
+          Text(
+            'Rates are indicative only. Updated periodically.',
+            style: TextStyle(fontSize: 10, color: Colors.grey.withOpacity(0.5)),
+          ),
         ],
       ),
     );
-  }
-
-  String _convertCurrency() {
-    try {
-      final amount = double.parse(amountCtrl.text);
-      final rate = (rates[toCurrency] ?? 1) / (rates[fromCurrency] ?? 1);
-      return (amount * rate).toStringAsFixed(2);
-    } catch (e) {
-      return '0.00';
-    }
   }
 
   @override
@@ -329,18 +492,26 @@ class _CurrencyConverterState extends State<_CurrencyConverter> {
   }
 }
 
-class _InputField extends StatelessWidget {
+// ─────────────────────────────────────────
+// Shared Widgets
+// ─────────────────────────────────────────
+
+/// Text field with built-in form validation
+class _ValidatedField extends StatelessWidget {
   final String label;
   final TextEditingController controller;
+  final String? Function(String?)? validator;
 
-  const _InputField(this.label, this.controller);
+  const _ValidatedField({required this.label, required this.controller, this.validator});
 
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.only(bottom: 16),
-      child: TextField(
+      padding: const EdgeInsets.only(bottom: 14),
+      child: TextFormField(
         controller: controller,
+        validator: validator,
+        keyboardType: const TextInputType.numberWithOptions(decimal: true),
         decoration: InputDecoration(
           labelText: label,
           filled: true,
@@ -349,13 +520,43 @@ class _InputField extends StatelessWidget {
             borderRadius: BorderRadius.circular(8),
             borderSide: const BorderSide(color: AppColors.borderColor),
           ),
+          errorStyle: const TextStyle(fontSize: 11),
         ),
-        keyboardType: TextInputType.number,
       ),
     );
   }
 }
 
+/// Results container card
+class _ResultCard extends StatelessWidget {
+  final String title;
+  final List<Widget> children;
+
+  const _ResultCard({required this.title, required this.children});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: AppColors.cardBg,
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(color: AppColors.borderColor),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(title, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14)),
+          const Divider(),
+          ...children,
+        ],
+      ),
+    );
+  }
+}
+
+/// Single result row with label and value
 class _ResultRow extends StatelessWidget {
   final String label;
   final String value;
@@ -366,14 +567,56 @@ class _ResultRow extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 8),
+      padding: const EdgeInsets.symmetric(vertical: 7),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
           Text(label, style: const TextStyle(fontSize: 12, color: Colors.grey)),
-          Text(value, style: TextStyle(fontWeight: FontWeight.bold, color: textColor)),
+          Text(value,
+              style: TextStyle(
+                fontWeight: FontWeight.bold,
+                fontSize: 13,
+                color: textColor,
+              )),
         ],
       ),
     );
   }
+}
+
+/// Placeholder when no calculation has been run yet
+class _EmptyResult extends StatelessWidget {
+  const _EmptyResult();
+
+  @override
+  Widget build(BuildContext context) {
+    return const Padding(
+      padding: EdgeInsets.symmetric(vertical: 12),
+      child: Center(
+        child: Text(
+          'Fill in the fields above and press Calculate',
+          style: TextStyle(color: Colors.grey, fontSize: 12),
+        ),
+      ),
+    );
+  }
+}
+
+// ─────────────────────────────────────────
+// Formatting helpers
+// ─────────────────────────────────────────
+String _formatMoney(double value) {
+  if (value.abs() >= 1000000) {
+    return '${(value / 1000000).toStringAsFixed(2)}M';
+  } else if (value.abs() >= 1000) {
+    final parts = value.toStringAsFixed(0).replaceAllMapped(
+        RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'), (m) => '${m[1]},');
+    return parts;
+  }
+  return value.toStringAsFixed(2);
+}
+
+String _formatInt(int value) {
+  return value.toString().replaceAllMapped(
+      RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'), (m) => '${m[1]},');
 }

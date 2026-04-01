@@ -5,7 +5,7 @@ Run: uvicorn main:app --reload --port 8000
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from routers import market, stocks, watchlist, trades, portfolio
+from routers import market, stocks, watchlist, trades, portfolio, performance
 
 app = FastAPI(
     title="HK Stock App API",
@@ -21,11 +21,12 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-app.include_router(market.router,    prefix="/api/market",    tags=["Market"])
-app.include_router(stocks.router,    prefix="/api/stock",     tags=["Stocks"])
-app.include_router(watchlist.router, prefix="/api/watchlist", tags=["Watchlist"])
-app.include_router(trades.router,    prefix="/api/trades",    tags=["Trades"])
-app.include_router(portfolio.router, prefix="/api/portfolio", tags=["Portfolio"])
+app.include_router(market.router,       prefix="/api/market",             tags=["Market"])
+app.include_router(stocks.router,       prefix="/api/stock",              tags=["Stocks"])
+app.include_router(watchlist.router,    prefix="/api/watchlist",          tags=["Watchlist"])
+app.include_router(trades.router,       prefix="/api/trades",             tags=["Trades"])
+app.include_router(portfolio.router,    prefix="/api/portfolio",          tags=["Portfolio"])
+app.include_router(performance.router,  prefix="/api/portfolio/performance", tags=["Performance"])
 
 @app.get("/ping")
 def ping():

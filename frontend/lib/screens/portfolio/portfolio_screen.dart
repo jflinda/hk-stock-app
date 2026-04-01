@@ -21,7 +21,7 @@ class _PortfolioScreenState extends ConsumerState<PortfolioScreen>
   @override
   void initState() {
     super.initState();
-    _tabController = TabController(length: 2, vsync: this);
+    _tabController = TabController(length: 3, vsync: this);
   }
 
   @override
@@ -42,6 +42,7 @@ class _PortfolioScreenState extends ConsumerState<PortfolioScreen>
           tabs: const [
             Tab(text: 'Positions'),
             Tab(text: 'Journal'),
+            Tab(text: 'Performance'),
           ],
         ),
       ),
@@ -50,6 +51,7 @@ class _PortfolioScreenState extends ConsumerState<PortfolioScreen>
         children: [
           _PositionsTab(),
           _JournalTab(),
+          _PerformanceTab(),
         ],
       ),
       floatingActionButton: FloatingActionButton(
@@ -901,4 +903,604 @@ class _ErrorCard extends StatelessWidget {
       ),
     );
   }
+}
+
+// ─────────────────────────────────────────────
+// Performance Review Tab  (7 Submodules)
+// ─────────────────────────────────────────────
+class _PerformanceTab extends ConsumerWidget {
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final perfAsync = ref.watch(performanceProvider);
+
+    return RefreshIndicator(
+      onRefresh: () async => ref.invalidate(performanceProvider),
+      child: perfAsync.when(
+        loading: () => const Center(child: CircularProgressIndicator()),
+        error: (err, _) => _ErrorCard(message: 'Failed to load performance: $err'),
+        data: (data) {
+          final overview = data['overview'] as Map<String, dynamic>? ?? {};
+          final monthlyReturns = (data['monthlyReturns'] as List?)?.cast<Map<String, dynamic>>() ?? [];
+          final cumulative = (data['cumulative'] as List?)?.cast<Map<String, dynamic>>() ?? [];
+          final drawdown = data['drawdown'] as Map<String, dynamic>? ?? {};
+          final sectorPL = (data['sectorPL'] as List?)?.cast<Map<String, dynamic>>() ?? [];
+          final holdingPeriods = data['holdingPeriods'] as Map<String, dynamic>? ?? {};
+          final benchmark = data['benchmark'] as Map<String, dynamic>? ?? {};
+
+          return ListView(
+            padding: const EdgeInsets.all(12),
+            children: [
+              // ── Module 1: Overview KPIs ──────────────────────────────
+              _SectionTitle('Performance Overview'),
+              _OverviewGrid(overview: overview),
+              const SizedBox(height: 16),
+
+              // ── Module 2: Monthly Returns Bar Chart ──────────────────
+              _SectionTitle('Monthly Returns'),
+              _MonthlyReturnsChart(data: monthlyReturns),
+              const SizedBox(height: 16),
+
+              // ── Module 3: Cumulative P&L Line Chart ──────────────────
+              _SectionTitle('Cumulative P&L'),
+              _CumulativePLChart(data: cumulative),
+              const SizedBox(height: 16),
+
+              // ── Module 4: Drawdown ───────────────────────────────────
+              _SectionTitle('Drawdown Analysis'),
+              _DrawdownCard(drawdown: drawdown),
+              const SizedBox(height: 16),
+
+              // ── Module 5: P&L by Ticker ──────────────────────────────
+              _SectionTitle('P&L by Stock'),
+              _SectorPLList(items: sectorPL),
+              const SizedBox(height: 16),
+
+              // ── Module 6: Holding Periods ────────────────────────────
+              _SectionTitle('Holding Periods'),
+              _HoldingPeriodCard(data: holdingPeriods),
+              const SizedBox(height: 16),
+
+              // ── Module 7: Benchmark vs HSI ───────────────────────────
+              _SectionTitle('vs HSI Benchmark'),
+              _BenchmarkCard(benchmark: benchmark),
+              const SizedBox(height: 24),
+            ],
+          );
+        },
+      ),
+    );
+  }
+}
+
+/// Styled section title
+class _SectionTitle extends StatelessWidget {
+  final String text;
+  const _SectionTitle(this.text);
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 8),
+      child: Text(
+        text,
+        style: const TextStyle(
+          fontSize: 13,
+          fontWeight: FontWeight.bold,
+          color: AppColors.accentBlue,
+          letterSpacing: 0.5,
+        ),
+      ),
+    );
+  }
+}
+
+/// Module 1 — Overview KPI grid
+class _OverviewGrid extends StatelessWidget {
+  final Map<String, dynamic> overview;
+  const _OverviewGrid({required this.overview});
+
+  @override
+  Widget build(BuildContext context) {
+    final pl = (overview['totalRealizedPL'] as num?)?.toDouble() ?? 0;
+    final retPct = (overview['returnPct'] as num?)?.toDouble() ?? 0;
+    final winRate = (overview['winRate'] as num?)?.toDouble() ?? 0;
+    final profitFactor = (overview['profitFactor'] as num?)?.toDouble() ?? 0;
+    final avgWin = (overview['avgWin'] as num?)?.toDouble() ?? 0;
+    final avgLoss = (overview['avgLoss'] as num?)?.toDouble() ?? 0;
+    final completed = overview['completedTrades'] ?? 0;
+
+    return Container(
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(
+        color: AppColors.cardBg,
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(color: AppColors.borderColor),
+      ),
+      child: Column(
+        children: [
+          // Big P&L display
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            crossAxisAlignment: CrossAxisAlignment.baseline,
+            textBaseline: TextBaseline.alphabetic,
+            children: [
+              Text(
+                '${pl >= 0 ? "+" : ""}HK\$${_fmt(pl.abs())}',
+                style: TextStyle(
+                  fontSize: 26,
+                  fontWeight: FontWeight.bold,
+                  color: pl >= 0 ? AppColors.upColor : AppColors.downColor,
+                ),
+              ),
+              const SizedBox(width: 8),
+              Text(
+                '(${retPct >= 0 ? "+" : ""}${retPct.toStringAsFixed(2)}%)',
+                style: TextStyle(
+                  fontSize: 14,
+                  color: retPct >= 0 ? AppColors.upColor : AppColors.downColor,
+                ),
+              ),
+            ],
+          ),
+          Text(
+            'Realized P&L · $completed closed trades',
+            style: const TextStyle(fontSize: 11, color: Colors.grey),
+          ),
+          const Divider(height: 20),
+          Row(
+            children: [
+              _KpiTile('Win Rate', '${winRate.toStringAsFixed(1)}%', AppColors.accentBlue),
+              _KpiTile('Profit Factor', profitFactor.toStringAsFixed(2), Colors.amber),
+              _KpiTile('Avg Win', '+HK\$${_fmt(avgWin)}', AppColors.upColor),
+              _KpiTile('Avg Loss', '-HK\$${_fmt(avgLoss)}', AppColors.downColor),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _KpiTile extends StatelessWidget {
+  final String label;
+  final String value;
+  final Color color;
+  const _KpiTile(this.label, this.value, this.color);
+
+  @override
+  Widget build(BuildContext context) {
+    return Expanded(
+      child: Column(
+        children: [
+          Text(value, style: TextStyle(fontWeight: FontWeight.bold, color: color, fontSize: 13)),
+          const SizedBox(height: 2),
+          Text(label, style: const TextStyle(fontSize: 10, color: Colors.grey)),
+        ],
+      ),
+    );
+  }
+}
+
+/// Module 2 — Monthly Returns horizontal bar chart
+class _MonthlyReturnsChart extends StatelessWidget {
+  final List<Map<String, dynamic>> data;
+  const _MonthlyReturnsChart({required this.data});
+
+  @override
+  Widget build(BuildContext context) {
+    if (data.isEmpty) {
+      return _EmptyModuleCard('No completed trades yet');
+    }
+    final maxAbs = data.map((d) => ((d['pl'] as num?) ?? 0).toDouble().abs()).fold(0.0, (a, b) => a > b ? a : b);
+
+    return Container(
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(
+        color: AppColors.cardBg,
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(color: AppColors.borderColor),
+      ),
+      child: Column(
+        children: data.map((item) {
+          final pl = ((item['pl'] as num?) ?? 0).toDouble();
+          final month = item['month']?.toString() ?? '';
+          final barRatio = maxAbs > 0 ? (pl.abs() / maxAbs).clamp(0.02, 1.0) : 0.02;
+          final color = pl >= 0 ? AppColors.upColor : AppColors.downColor;
+          return Padding(
+            padding: const EdgeInsets.symmetric(vertical: 4),
+            child: Row(
+              children: [
+                SizedBox(
+                  width: 52,
+                  child: Text(month.length >= 7 ? month.substring(2) : month,
+                      style: const TextStyle(fontSize: 11, color: Colors.grey)),
+                ),
+                const SizedBox(width: 4),
+                Expanded(
+                  child: Stack(
+                    alignment: Alignment.centerLeft,
+                    children: [
+                      Container(height: 16, color: AppColors.darkBg),
+                      FractionallySizedBox(
+                        widthFactor: barRatio,
+                        child: Container(height: 16, color: color.withOpacity(0.8)),
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(width: 8),
+                SizedBox(
+                  width: 72,
+                  child: Text(
+                    '${pl >= 0 ? "+" : ""}HK\$${_fmt(pl.abs())}',
+                    textAlign: TextAlign.right,
+                    style: TextStyle(fontSize: 11, color: color, fontWeight: FontWeight.bold),
+                  ),
+                ),
+              ],
+            ),
+          );
+        }).toList(),
+      ),
+    );
+  }
+}
+
+/// Module 3 — Cumulative P&L polyline chart (CustomPainter)
+class _CumulativePLChart extends StatelessWidget {
+  final List<Map<String, dynamic>> data;
+  const _CumulativePLChart({required this.data});
+
+  @override
+  Widget build(BuildContext context) {
+    if (data.length < 2) {
+      return _EmptyModuleCard('Need at least 2 completed trades');
+    }
+    return Container(
+      height: 140,
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: AppColors.cardBg,
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(color: AppColors.borderColor),
+      ),
+      child: CustomPaint(
+        painter: _CumPLPainter(data),
+        child: const SizedBox.expand(),
+      ),
+    );
+  }
+}
+
+class _CumPLPainter extends CustomPainter {
+  final List<Map<String, dynamic>> data;
+  _CumPLPainter(this.data);
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    if (data.isEmpty) return;
+
+    final values = data.map((d) => ((d['cumPL'] as num?) ?? 0).toDouble()).toList();
+    final minV = values.reduce((a, b) => a < b ? a : b);
+    final maxV = values.reduce((a, b) => a > b ? a : b);
+    final range = maxV - minV;
+    if (range == 0) return;
+
+    final isPositive = values.last >= 0;
+    final lineColor = isPositive ? AppColors.upColor : AppColors.downColor;
+
+    final paint = Paint()
+      ..color = lineColor
+      ..strokeWidth = 1.8
+      ..style = PaintingStyle.stroke;
+
+    final fillPaint = Paint()
+      ..color = lineColor.withOpacity(0.15)
+      ..style = PaintingStyle.fill;
+
+    final path = Path();
+    final fillPath = Path();
+
+    for (int i = 0; i < data.length; i++) {
+      final x = size.width * i / (data.length - 1);
+      final y = size.height - (values[i] - minV) / range * size.height;
+      if (i == 0) {
+        path.moveTo(x, y);
+        fillPath.moveTo(x, size.height);
+        fillPath.lineTo(x, y);
+      } else {
+        path.lineTo(x, y);
+        fillPath.lineTo(x, y);
+      }
+    }
+    fillPath.lineTo(size.width, size.height);
+    fillPath.close();
+
+    canvas.drawPath(fillPath, fillPaint);
+    canvas.drawPath(path, paint);
+
+    // Zero line
+    final zeroY = size.height - (0 - minV) / range * size.height;
+    if (zeroY >= 0 && zeroY <= size.height) {
+      canvas.drawLine(
+        Offset(0, zeroY),
+        Offset(size.width, zeroY),
+        Paint()
+          ..color = Colors.grey.withOpacity(0.3)
+          ..strokeWidth = 0.8,
+      );
+    }
+  }
+
+  @override
+  bool shouldRepaint(_CumPLPainter old) => old.data != data;
+}
+
+/// Module 4 — Drawdown card
+class _DrawdownCard extends StatelessWidget {
+  final Map<String, dynamic> drawdown;
+  const _DrawdownCard({required this.drawdown});
+
+  @override
+  Widget build(BuildContext context) {
+    final maxDD = ((drawdown['maxDrawdown'] as num?) ?? 0).toDouble();
+    final maxDDPct = ((drawdown['maxDrawdownPct'] as num?) ?? 0).toDouble();
+
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: AppColors.cardBg,
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(color: AppColors.borderColor),
+      ),
+      child: Row(
+        children: [
+          const Icon(Icons.trending_down, size: 32, color: Colors.orangeAccent),
+          const SizedBox(width: 16),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Text('Max Drawdown', style: TextStyle(fontSize: 12, color: Colors.grey)),
+                const SizedBox(height: 4),
+                Text(
+                  '-HK\$${_fmt(maxDD)} (${maxDDPct.toStringAsFixed(1)}%)',
+                  style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.orangeAccent),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+/// Module 5 — P&L by ticker list
+class _SectorPLList extends StatelessWidget {
+  final List<Map<String, dynamic>> items;
+  const _SectorPLList({required this.items});
+
+  @override
+  Widget build(BuildContext context) {
+    if (items.isEmpty) {
+      return _EmptyModuleCard('No closed positions yet');
+    }
+    final maxAbs = items.map((d) => ((d['pl'] as num?) ?? 0).toDouble().abs()).fold(0.0, (a, b) => a > b ? a : b);
+
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+      decoration: BoxDecoration(
+        color: AppColors.cardBg,
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(color: AppColors.borderColor),
+      ),
+      child: Column(
+        children: items.map((item) {
+          final pl = ((item['pl'] as num?) ?? 0).toDouble();
+          final ticker = item['ticker']?.toString() ?? '';
+          final barRatio = maxAbs > 0 ? (pl.abs() / maxAbs).clamp(0.02, 1.0) : 0.02;
+          final color = pl >= 0 ? AppColors.upColor : AppColors.downColor;
+          return Padding(
+            padding: const EdgeInsets.symmetric(vertical: 5),
+            child: Row(
+              children: [
+                Container(
+                  width: 50,
+                  padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
+                  decoration: BoxDecoration(
+                    color: color.withOpacity(0.12),
+                    borderRadius: BorderRadius.circular(4),
+                  ),
+                  child: Text(ticker,
+                      textAlign: TextAlign.center,
+                      style: TextStyle(fontSize: 10, color: color, fontWeight: FontWeight.bold)),
+                ),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: Stack(
+                    alignment: Alignment.centerLeft,
+                    children: [
+                      Container(height: 12, color: AppColors.darkBg),
+                      FractionallySizedBox(
+                        widthFactor: barRatio,
+                        child: Container(height: 12, color: color.withOpacity(0.75)),
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(width: 8),
+                SizedBox(
+                  width: 76,
+                  child: Text(
+                    '${pl >= 0 ? "+" : ""}HK\$${_fmt(pl.abs())}',
+                    textAlign: TextAlign.right,
+                    style: TextStyle(fontSize: 11, color: color, fontWeight: FontWeight.bold),
+                  ),
+                ),
+              ],
+            ),
+          );
+        }).toList(),
+      ),
+    );
+  }
+}
+
+/// Module 6 — Holding period summary
+class _HoldingPeriodCard extends StatelessWidget {
+  final Map<String, dynamic> data;
+  const _HoldingPeriodCard({required this.data});
+
+  @override
+  Widget build(BuildContext context) {
+    final avgDays = ((data['avgDays'] as num?) ?? 0).toDouble();
+    final details = (data['details'] as List?)?.cast<Map<String, dynamic>>() ?? [];
+
+    return Container(
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(
+        color: AppColors.cardBg,
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(color: AppColors.borderColor),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              const Icon(Icons.timer_outlined, size: 20, color: AppColors.accentBlue),
+              const SizedBox(width: 8),
+              Text(
+                'Avg Holding: ${avgDays.toStringAsFixed(1)} days',
+                style: const TextStyle(fontWeight: FontWeight.bold),
+              ),
+            ],
+          ),
+          if (details.isNotEmpty) ...[
+            const Divider(height: 16),
+            ...details.take(5).map((h) => Padding(
+              padding: const EdgeInsets.symmetric(vertical: 3),
+              child: Row(
+                children: [
+                  Container(
+                    width: 44,
+                    padding: const EdgeInsets.symmetric(horizontal: 3, vertical: 2),
+                    decoration: BoxDecoration(
+                      color: AppColors.darkBg,
+                      borderRadius: BorderRadius.circular(3),
+                    ),
+                    child: Text(h['ticker']?.toString() ?? '',
+                        style: const TextStyle(fontSize: 10), textAlign: TextAlign.center),
+                  ),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: Text(
+                      '${h['buyDate']} → ${h['sellDate']}',
+                      style: const TextStyle(fontSize: 10, color: Colors.grey),
+                    ),
+                  ),
+                  Text(
+                    '${h['holdingDays']}d',
+                    style: const TextStyle(fontSize: 11, color: AppColors.accentBlue),
+                  ),
+                ],
+              ),
+            )),
+          ],
+        ],
+      ),
+    );
+  }
+}
+
+/// Module 7 — Benchmark comparison (Portfolio vs HSI)
+class _BenchmarkCard extends StatelessWidget {
+  final Map<String, dynamic> benchmark;
+  const _BenchmarkCard({required this.benchmark});
+
+  @override
+  Widget build(BuildContext context) {
+    final portRet = ((benchmark['portfolioReturn'] as num?) ?? 0).toDouble();
+    final hsiRet = ((benchmark['hsiYTD'] as num?) ?? 0).toDouble();
+    final alpha = ((benchmark['alpha'] as num?) ?? 0).toDouble();
+
+    final portColor = portRet >= 0 ? AppColors.upColor : AppColors.downColor;
+    final hsiColor = hsiRet >= 0 ? AppColors.upColor : AppColors.downColor;
+    final alphaColor = alpha >= 0 ? AppColors.upColor : AppColors.downColor;
+
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: AppColors.cardBg,
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(color: AppColors.borderColor),
+      ),
+      child: Column(
+        children: [
+          Row(
+            children: [
+              _BenchmarkItem('My Portfolio', '${portRet >= 0 ? "+" : ""}${portRet.toStringAsFixed(2)}%', portColor),
+              Container(width: 1, height: 40, color: AppColors.borderColor),
+              _BenchmarkItem('HSI YTD', '${hsiRet >= 0 ? "+" : ""}${hsiRet.toStringAsFixed(2)}%', hsiColor),
+              Container(width: 1, height: 40, color: AppColors.borderColor),
+              _BenchmarkItem('Alpha', '${alpha >= 0 ? "+" : ""}${alpha.toStringAsFixed(2)}%', alphaColor,
+                  subtitle: alpha >= 0 ? 'Outperforming' : 'Underperforming'),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _BenchmarkItem extends StatelessWidget {
+  final String label;
+  final String value;
+  final Color color;
+  final String? subtitle;
+  const _BenchmarkItem(this.label, this.value, this.color, {this.subtitle});
+
+  @override
+  Widget build(BuildContext context) {
+    return Expanded(
+      child: Column(
+        children: [
+          Text(label, style: const TextStyle(fontSize: 10, color: Colors.grey)),
+          const SizedBox(height: 4),
+          Text(value, style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: color)),
+          if (subtitle != null)
+            Text(subtitle!, style: TextStyle(fontSize: 9, color: color.withOpacity(0.7))),
+        ],
+      ),
+    );
+  }
+}
+
+/// Empty state for modules with no data
+class _EmptyModuleCard extends StatelessWidget {
+  final String msg;
+  const _EmptyModuleCard(this.msg);
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      height: 60,
+      alignment: Alignment.center,
+      decoration: BoxDecoration(
+        color: AppColors.cardBg,
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(color: AppColors.borderColor),
+      ),
+      child: Text(msg, style: const TextStyle(color: Colors.grey, fontSize: 12)),
+    );
+  }
+}
+
+/// Number formatter helper
+String _fmt(double v) {
+  if (v.abs() >= 1000000) return '${(v / 1000000).toStringAsFixed(2)}M';
+  if (v.abs() >= 1000) {
+    return v.toStringAsFixed(0).replaceAllMapped(
+        RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'), (m) => '${m[1]},');
+  }
+  return v.toStringAsFixed(2);
 }
