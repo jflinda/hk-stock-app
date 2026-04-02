@@ -4,15 +4,18 @@ import 'package:flutter/material.dart';
 class AppColors {
   /// Up/Gain color (red) - Hong Kong convention
   static const Color upColor = Color(0xFFF03E3E);
+  static const Color red = Color(0xFFF03E3E); // Alias for upColor
 
   /// Down/Loss color (green) - Hong Kong convention
   static const Color downColor = Color(0xFF3FB950);
+  static const Color green = Color(0xFF3FB950); // Alias for downColor
 
   /// Neutral color (gray)
   static const Color neutralColor = Color(0xFF757575);
 
   /// Primary color
   static const Color primary = Color(0xFF58A6FF);
+  static const Color blue = Color(0xFF58A6FF); // Alias for primary
 
   /// Primary dark
   static const Color primaryDark = Color(0xFF1565C0);
@@ -40,12 +43,21 @@ class AppColors {
 
   /// Text primary
   static const Color textPrimary = Color(0xFFE6EDF3);
+  static const Color text = Color(0xFFE6EDF3); // Alias for textPrimary
 
   /// Text secondary
   static const Color textSecondary = Color(0xFF8B949E);
+  static const Color text2 = Color(0xFF8B949E); // Alias for textSecondary
 
   /// Divider color
   static const Color divider = Color(0xFF30363D);
+  static const Color border = Color(0xFF30363D); // Alias for divider
+  
+  /// Surface colors
+  static const Color surface2 = Color(0xFF21262D); // Slightly lighter than cardBg
+  
+  /// Gold color for special highlights
+  static const Color gold = Color(0xFFF0B429);
 }
 
 /// App sizing constants
@@ -111,7 +123,8 @@ class BottomNavTab {
 
 /// API endpoints
 class ApiEndpoints {
-  static const String baseUrl = 'http://localhost:8000/api';
+  // Note: This baseUrl is not used directly - use ApiService.baseUrl instead
+  static const String baseUrl = 'http://192.168.3.30:8001/api';
   static const String marketIndices = '/market/indices';
   static const String marketMovers = '/market/movers';
   static const String stockQuote = '/stock/:ticker/quote';

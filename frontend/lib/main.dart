@@ -6,10 +6,11 @@ import 'package:hk_stock_app/providers/market_providers.dart';
 import 'package:hk_stock_app/providers/portfolio_providers.dart';
 import 'package:hk_stock_app/providers/watchlist_providers.dart';
 import 'package:hk_stock_app/screens/portfolio/portfolio_screen.dart';
-import 'package:hk_stock_app/screens/market/market_screen.dart';
+import 'package:hk_stock_app/screens/market/market_screen_simple.dart' as market;
 import 'package:hk_stock_app/screens/watchlist/watchlist_screen.dart';
 import 'package:hk_stock_app/screens/tools/tools_screen.dart';
 import 'package:hk_stock_app/screens/settings/settings_screen.dart';
+
 import 'package:hk_stock_app/services/api_service.dart';
 import 'package:hk_stock_app/services/notification_service.dart';
 import 'package:hk_stock_app/services/price_alert_checker.dart';
@@ -38,7 +39,7 @@ class HKStockApp extends StatelessWidget {
           primary: AppColors.accentBlue,
           secondary: AppColors.accentBlue,
           surface: AppColors.cardBg,
-          background: AppColors.darkBg,
+
         ),
         scaffoldBackgroundColor: AppColors.darkBg,
         appBarTheme: const AppBarTheme(
@@ -148,12 +149,12 @@ class _MainAppState extends ConsumerState<MainApp> {
   Widget build(BuildContext context) {
     final currentTab = ref.watch(currentTabProvider);
 
-    final screens = [
-      const PortfolioScreen(),
-      const MarketScreen(),
-      const WatchlistScreen(),
-      const ToolsScreen(),
-      const SettingsScreen(),
+    final List<Widget> screens = [
+      PortfolioScreen(),
+      market.MarketScreenSimple(),
+      WatchlistScreen(),
+      ToolsScreen(),
+      SettingsScreen(),
     ];
 
     return Scaffold(
@@ -180,6 +181,8 @@ class _MainAppState extends ConsumerState<MainApp> {
               .toList(),
         ),
       ),
+
+
     );
   }
 }

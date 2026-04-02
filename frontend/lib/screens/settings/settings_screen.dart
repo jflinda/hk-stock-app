@@ -6,7 +6,7 @@ import 'package:path_provider/path_provider.dart';
 
 /// Settings Screen - User preferences and configuration
 class SettingsScreen extends StatefulWidget {
-  const SettingsScreen({Key? key}) : super(key: key);
+  const SettingsScreen({super.key});
 
   @override
   State<SettingsScreen> createState() => _SettingsScreenState();
@@ -39,7 +39,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
           SnackBar(
             content: Text('Exported to ${file.path}'),
             duration: const Duration(seconds: 4),
-            backgroundColor: Colors.green.withOpacity(0.85),
+            backgroundColor: Colors.green.withValues(alpha: 0.85),
           ),
         );
       }
@@ -87,8 +87,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: const [
-                    Text('John Liu', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
-                    Text('jlinda@example.com', style: TextStyle(fontSize: 12, color: Colors.grey)),
+                    Text('Linda Wong', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+                    Text('linda.wong@example.com', style: TextStyle(fontSize: 12, color: Colors.grey)),
                     Text('Member since Mar 2026', style: TextStyle(fontSize: 12, color: Colors.grey)),
                   ],
                 ),
@@ -315,7 +315,7 @@ class _SettingTile extends StatelessWidget {
                 ],
               ),
             ),
-            if (trailing != null) trailing!,
+            ?trailing,
           ],
         ),
       ),
@@ -357,7 +357,7 @@ class _SwitchTile extends StatelessWidget {
           Switch(
             value: value,
             onChanged: onChanged,
-            activeColor: AppColors.accentBlue,
+            activeThumbColor: AppColors.accentBlue,
           ),
         ],
       ),

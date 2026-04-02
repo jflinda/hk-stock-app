@@ -1,0 +1,121 @@
+﻿Analyzing frontend...                                           
+
+  error - Target of URI doesn't exist: 'package:flutter_chen_kchart/flutter_chen_kchart.dart' - lib\components\kline_chart.dart:2:8 - uri_does_not_exist
+   info - Parameter 'key' could be a super parameter - lib\components\kline_chart.dart:12:9 - use_super_parameters
+  error - Undefined class 'KChartController' - lib\components\kline_chart.dart:25:8 - undefined_class
+  error - The method 'KChartController' isn't defined for the type '_KlineChartState' - lib\components\kline_chart.dart:30:19 - undefined_method
+  error - The method 'KChartWidget' isn't defined for the type '_KlineChartState' - lib\components\kline_chart.dart:55:14 - undefined_method
+  error - The method 'KChartThemeData' isn't defined for the type '_KlineChartState' - lib\components\kline_chart.dart:66:16 - undefined_method
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\components\kline_chart.dart:75:46 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\components\kline_chart.dart:78:50 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\components\kline_chart.dart:79:52 - deprecated_member_use
+  error - The name 'KLineEntity' isn't a type, so it can't be used as a type argument - lib\components\kline_chart.dart:86:8 - non_type_as_type_argument
+  error - The method 'KLineEntity' isn't defined for the type '_KlineChartState' - lib\components\kline_chart.dart:94:14 - undefined_method
+   info - Parameter 'key' could be a super parameter - lib\components\kline_chart.dart:130:9 - use_super_parameters
+  error - The method 'KLineEntity' isn't defined for the type 'MiniKlineChart' - lib\components\kline_chart.dart:155:14 - undefined_method
+  error - The method 'KChartWidget' isn't defined for the type 'MiniKlineChart' - lib\components\kline_chart.dart:169:14 - undefined_method
+  error - The method 'KChartController' isn't defined for the type 'MiniKlineChart' - lib\components\kline_chart.dart:171:21 - undefined_method
+  error - The method 'KChartThemeData' isn't defined for the type 'MiniKlineChart' - lib\components\kline_chart.dart:179:16 - undefined_method
+   info - 'background' is deprecated and shouldn't be used. Use surface instead. This feature was deprecated after v3.18.0-0.1.pre - lib\main.dart:42:11 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\screens\market\market_screen.dart:108:65 - deprecated_member_use
+   info - Parameter 'key' could be a super parameter - lib\screens\market\market_screen_backup.dart:9:9 - use_super_parameters
+  error - Too many positional arguments: 0 expected, but 4 found - lib\screens\market\market_screen_backup.dart:203:21 - extra_positional_arguments_could_be_named
+  error - Expected to find ')' - lib\screens\market\market_screen_backup.dart:231:19 - expected_token
+warning - The '!' will have no effect because the receiver can't be null - lib\screens\market\market_screen_backup.dart:376:61 - unnecessary_non_null_assertion
+  error - Expected an identifier - lib\screens\market\market_screen_backup.dart:411:13 - missing_identifier
+  error - Expected to find ')' - lib\screens\market\market_screen_backup.dart:411:13 - expected_token
+  error - Expected to find ';' - lib\screens\market\market_screen_backup.dart:413:9 - expected_token
+warning - Dead code - lib\screens\market\market_screen_backup.dart:413:10 - dead_code
+  error - Expected an identifier - lib\screens\market\market_screen_backup.dart:413:10 - missing_identifier
+  error - Expected to find ';' - lib\screens\market\market_screen_backup.dart:413:10 - expected_token
+  error - Unexpected text ';' - lib\screens\market\market_screen_backup.dart:413:10 - unexpected_token
+  error - Expected an identifier - lib\screens\market\market_screen_backup.dart:414:7 - missing_identifier
+  error - Expected to find ';' - lib\screens\market\market_screen_backup.dart:414:7 - expected_token
+  error - Unexpected text ';' - lib\screens\market\market_screen_backup.dart:414:7 - unexpected_token
+  error - Expected an identifier - lib\screens\market\market_screen_backup.dart:414:8 - missing_identifier
+  error - Expected to find ';' - lib\screens\market\market_screen_backup.dart:414:8 - expected_token
+  error - Unexpected text ';' - lib\screens\market\market_screen_backup.dart:414:8 - unexpected_token
+  error - Expected an identifier - lib\screens\market\market_screen_backup.dart:415:5 - missing_identifier
+  error - Unexpected text ';' - lib\screens\market\market_screen_backup.dart:415:5 - unexpected_token
+   info - Unnecessary empty statement - lib\screens\market\market_screen_backup.dart:415:6 - empty_statements
+warning - The declaration '_buildGainersTab' isn't referenced - lib\screens\market\market_screen_backup.dart:419:10 - unused_element
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\screens\market\market_screen_backup.dart:751:24 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\screens\market\market_screen_backup.dart:754:26 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\screens\market\market_screen_simple.dart:108:65 - deprecated_member_use
+   info - Parameter 'key' could be a super parameter - lib\screens\portfolio\portfolio_screen.dart:11:9 - use_super_parameters
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\screens\portfolio\portfolio_screen.dart:348:27 - deprecated_member_use
+   info - Don't use 'BuildContext's across async gaps - lib\screens\portfolio\portfolio_screen.dart:373:32 - use_build_context_synchronously
+   info - Don't use 'BuildContext's across async gaps - lib\screens\portfolio\portfolio_screen.dart:379:32 - use_build_context_synchronously
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\screens\portfolio\portfolio_screen.dart:400:34 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\screens\portfolio\portfolio_screen.dart:731:39 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\screens\portfolio\portfolio_screen.dart:797:37 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\screens\portfolio\portfolio_screen.dart:867:53 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\screens\portfolio\portfolio_screen.dart:891:27 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\screens\portfolio\portfolio_screen.dart:1125:67 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\screens\portfolio\portfolio_screen.dart:1197:27 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\screens\portfolio\portfolio_screen.dart:1228:33 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\screens\portfolio\portfolio_screen.dart:1311:34 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\screens\portfolio\portfolio_screen.dart:1326:67 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\screens\portfolio\portfolio_screen.dart:1472:72 - deprecated_member_use
+   info - Parameter 'key' could be a super parameter - lib\screens\settings\settings_screen.dart:9:9 - use_super_parameters
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\screens\settings\settings_screen.dart:42:43 - deprecated_member_use
+   info - Use the null-aware marker '?' rather than a null check via an 'if' - lib\screens\settings\settings_screen.dart:318:13 - use_null_aware_elements
+   info - 'activeColor' is deprecated and shouldn't be used. Use activeThumbColor instead. This feature was deprecated after v3.31.0-2.0.pre - lib\screens\settings\settings_screen.dart:360:13 - deprecated_member_use
+   info - Parameter 'key' could be a super parameter - lib\screens\stock_detail\stock_detail_screen.dart:16:9 - use_super_parameters
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\screens\stock_detail\stock_detail_screen.dart:134:40 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\screens\stock_detail\stock_detail_screen.dart:806:47 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\screens\stock_detail\stock_detail_screen.dart:937:22 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\screens\stock_detail\stock_detail_screen.dart:939:41 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\screens\stock_detail\stock_detail_screen.dart:946:46 - deprecated_member_use
+   info - Parameter 'key' could be a super parameter - lib\screens\tools\tools_screen.dart:6:9 - use_super_parameters
+   info - 'value' is deprecated and shouldn't be used. Use initialValue instead. This will set the initial value for the form field. This feature was deprecated after v3.33.0-1.0.pre - lib\screens\tools\tools_screen.dart:393:19 - deprecated_member_use
+   info - 'value' is deprecated and shouldn't be used. Use initialValue instead. This will set the initial value for the form field. This feature was deprecated after v3.33.0-1.0.pre - lib\screens\tools\tools_screen.dart:427:19 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\screens\tools\tools_screen.dart:452:62 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\screens\tools\tools_screen.dart:473:69 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\screens\tools\tools_screen.dart:481:63 - deprecated_member_use
+   info - Parameter 'key' could be a super parameter - lib\screens\watchlist\watchlist_screen.dart:9:9 - use_super_parameters
+   info - Unnecessary use of multiple underscores - lib\screens\watchlist\watchlist_screen.dart:45:28 - unnecessary_underscores
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\screens\watchlist\watchlist_screen.dart:203:22 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\screens\watchlist\watchlist_screen.dart:205:41 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\screens\watchlist\watchlist_screen.dart:210:59 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\screens\watchlist\watchlist_screen.dart:341:48 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\screens\watchlist\watchlist_screen.dart:585:46 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\screens\watchlist\watchlist_screen.dart:609:27 - deprecated_member_use
+   info - Don't invoke 'print' in production code - lib\services\api_service.dart:26:26 - avoid_print
+   info - Don't invoke 'print' in production code - lib\services\api_service.dart:95:7 - avoid_print
+   info - Don't invoke 'print' in production code - lib\services\api_service.dart:144:7 - avoid_print
+   info - Don't invoke 'print' in production code - lib\services\api_service.dart:160:7 - avoid_print
+   info - Don't invoke 'print' in production code - lib\services\api_service.dart:183:7 - avoid_print
+   info - Don't invoke 'print' in production code - lib\services\api_service.dart:203:7 - avoid_print
+   info - Don't invoke 'print' in production code - lib\services\api_service.dart:221:7 - avoid_print
+   info - Don't invoke 'print' in production code - lib\services\api_service.dart:249:7 - avoid_print
+   info - Don't invoke 'print' in production code - lib\services\api_service.dart:263:7 - avoid_print
+   info - Don't invoke 'print' in production code - lib\services\api_service.dart:278:7 - avoid_print
+   info - Don't invoke 'print' in production code - lib\services\api_service.dart:296:7 - avoid_print
+   info - Don't invoke 'print' in production code - lib\services\api_service.dart:322:7 - avoid_print
+   info - Don't invoke 'print' in production code - lib\services\api_service.dart:363:7 - avoid_print
+   info - Don't invoke 'print' in production code - lib\services\api_service.dart:377:7 - avoid_print
+   info - Don't invoke 'print' in production code - lib\services\api_service.dart:391:7 - avoid_print
+   info - Don't invoke 'print' in production code - lib\services\api_service.dart:408:7 - avoid_print
+   info - Parameter 'key' could be a super parameter - lib\widgets\index_card.dart:9:9 - use_super_parameters
+   info - Unnecessary use of string interpolation - lib\widgets\index_card.dart:46:17 - unnecessary_string_interpolations
+   info - Parameter 'key' could be a super parameter - lib\widgets\stock_row.dart:11:9 - use_super_parameters
+   info - Don't invoke 'print' in production code - test_build.dart:52:17 - avoid_print
+  error - Target of URI doesn't exist: '../constants/app_constants.dart' - test_market_screen.dart:3:8 - uri_does_not_exist
+  error - Invalid constant value - test_market_screen.dart:16:43 - invalid_constant
+  error - Undefined name 'AppSizes' - test_market_screen.dart:16:43 - undefined_identifier
+  error - Invalid constant value - test_market_screen.dart:38:40 - invalid_constant
+  error - Undefined name 'AppSizes' - test_market_screen.dart:38:40 - undefined_identifier
+  error - Invalid constant value - test_market_screen.dart:42:49 - invalid_constant
+  error - Undefined name 'AppSizes' - test_market_screen.dart:42:49 - undefined_identifier
+  error - Invalid constant value - test_market_screen.dart:57:46 - invalid_constant
+  error - Undefined name 'AppSizes' - test_market_screen.dart:57:46 - undefined_identifier
+  error - Undefined name 'AppColors' - test_market_screen.dart:62:34 - undefined_identifier
+
+flutter.bat : 111 issues found. (ran in 12.2s)
+At C:\Users\jflin\WorkBuddy\20260329125422\stocktrading\run_analyze.ps1:3 char:8
++ $out = & 'C:\flutter\flutter\bin\flutter.bat' analyze 2>&1
++        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: (111 issues found. (ran in 12.2s):String) [], RemoteException
+    + FullyQualifiedErrorId : NativeCommandError
+ 

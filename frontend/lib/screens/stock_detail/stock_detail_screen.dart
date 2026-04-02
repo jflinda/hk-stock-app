@@ -6,6 +6,7 @@ import 'package:hk_stock_app/providers/market_providers.dart';
 import 'package:hk_stock_app/providers/portfolio_providers.dart';
 import 'package:hk_stock_app/providers/trades_providers.dart';
 import 'package:hk_stock_app/services/api_service.dart';
+import 'package:hk_stock_app/components/kline_chart.dart';
 
 /// Stock Detail Screen - Real API data with quote + history
 class StockDetailScreen extends ConsumerStatefulWidget {
@@ -15,8 +16,8 @@ class StockDetailScreen extends ConsumerStatefulWidget {
   const StockDetailScreen({
     required this.ticker,
     required this.name,
-    Key? key,
-  }) : super(key: key);
+    super.key,
+  });
 
   @override
   ConsumerState<StockDetailScreen> createState() => _StockDetailScreenState();
@@ -130,7 +131,7 @@ class _StockDetailScreenState extends ConsumerState<StockDetailScreen>
                       padding: const EdgeInsets.symmetric(
                           horizontal: 8, vertical: 3),
                       decoration: BoxDecoration(
-                        color: plColor.withOpacity(0.15),
+                        color: plColor.withValues(alpha: 0.15),
                         borderRadius: BorderRadius.circular(4),
                       ),
                       child: Text(
@@ -243,16 +244,18 @@ class _StockDetailScreenState extends ConsumerState<StockDetailScreen>
 
                 // Chart area
                 historyAsync.when(
-                  data: (klines) => _SimpleLineChart(
+                  data: (klines) => KlineChart(
                     klines: klines,
                     isGainer: isGainer,
+                    height: 300,
+                    showVolume: true,
                   ),
                   loading: () => const SizedBox(
-                    height: 180,
+                    height: 300,
                     child: Center(child: CircularProgressIndicator()),
                   ),
                   error: (err, _) => SizedBox(
-                    height: 180,
+                    height: 300,
                     child: Center(
                       child: Text('Chart unavailable: $err',
                           style: const TextStyle(
@@ -300,109 +303,7 @@ class _StockDetailScreenState extends ConsumerState<StockDetailScreen>
   }
 }
 
-// ─────────────────────────────────────────────
-// Simple Line / Area Chart (custom paint)
-// ─────────────────────────────────────────────
-class _SimpleLineChart extends StatelessWidget {
-  final List<KlineData> klines;
-  final bool isGainer;
 
-  const _SimpleLineChart(
-      {required this.klines, required this.isGainer});
-
-  @override
-  Widget build(BuildContext context) {
-    if (klines.isEmpty) {
-      return const SizedBox(
-        height: 180,
-        child: Center(
-            child: Text('No data', style: TextStyle(color: Colors.grey))),
-      );
-    }
-
-    return SizedBox(
-      height: 180,
-      child: CustomPaint(
-        painter: _LineChartPainter(
-          klines: klines,
-          lineColor: isGainer ? AppColors.upColor : AppColors.downColor,
-        ),
-        size: const Size(double.infinity, 180),
-      ),
-    );
-  }
-}
-
-class _LineChartPainter extends CustomPainter {
-  final List<KlineData> klines;
-  final Color lineColor;
-
-  _LineChartPainter({required this.klines, required this.lineColor});
-
-  @override
-  void paint(Canvas canvas, Size size) {
-    if (klines.length < 2) return;
-
-    final prices = klines.map((k) => k.close).toList();
-    final minPrice = prices.reduce((a, b) => a < b ? a : b);
-    final maxPrice = prices.reduce((a, b) => a > b ? a : b);
-    final priceRange = maxPrice - minPrice;
-    if (priceRange == 0) return;
-
-    final linePaint = Paint()
-      ..color = lineColor
-      ..strokeWidth = 2
-      ..style = PaintingStyle.stroke
-      ..strokeCap = StrokeCap.round;
-
-    final fillPaint = Paint()
-      ..color = lineColor.withOpacity(0.1)
-      ..style = PaintingStyle.fill;
-
-    final path = Path();
-    final fillPath = Path();
-
-    final xStep = size.width / (klines.length - 1);
-    final padding = 20.0;
-    final chartHeight = size.height - padding * 2;
-
-    for (int i = 0; i < klines.length; i++) {
-      final x = i * xStep;
-      final y = padding +
-          chartHeight * (1 - (klines[i].close - minPrice) / priceRange);
-
-      if (i == 0) {
-        path.moveTo(x, y);
-        fillPath.moveTo(x, size.height);
-        fillPath.lineTo(x, y);
-      } else {
-        path.lineTo(x, y);
-        fillPath.lineTo(x, y);
-      }
-    }
-
-    fillPath.lineTo(size.width, size.height);
-    fillPath.close();
-
-    canvas.drawPath(fillPath, fillPaint);
-    canvas.drawPath(path, linePaint);
-
-    // Draw current price label
-    final lastPrice = klines.last.close;
-    final lastX = (klines.length - 1) * xStep;
-    final lastY = padding +
-        chartHeight * (1 - (lastPrice - minPrice) / priceRange);
-
-    final dotPaint = Paint()
-      ..color = lineColor
-      ..style = PaintingStyle.fill;
-    canvas.drawCircle(Offset(lastX, lastY), 4, dotPaint);
-  }
-
-  @override
-  bool shouldRepaint(_LineChartPainter old) =>
-      old.klines != klines || old.lineColor != lineColor;
-}
 
 // ─────────────────────────────────────────────
 // Overview Tab
@@ -902,7 +803,7 @@ class _QuickTradeModalState extends State<_QuickTradeModal> {
                                 const EdgeInsets.symmetric(vertical: 12),
                             decoration: BoxDecoration(
                               color: _type == t
-                                  ? typeColor.withOpacity(0.2)
+                                  ? typeColor.withValues(alpha: 0.2)
                                   : AppColors.darkBg,
                               borderRadius: BorderRadius.circular(8),
                               border: Border.all(
@@ -1033,16 +934,16 @@ class _PriceBadge extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
       decoration: BoxDecoration(
-        color: color.withOpacity(0.1),
+        color: color.withValues(alpha: 0.1),
         borderRadius: BorderRadius.circular(6),
-        border: Border.all(color: color.withOpacity(0.3)),
+        border: Border.all(color: color.withValues(alpha: 0.3)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(label,
               style: TextStyle(
-                  fontSize: 10, color: color.withOpacity(0.8))),
+                  fontSize: 10, color: color.withValues(alpha: 0.8))),
           Text(value,
               style: TextStyle(
                   fontSize: 12,

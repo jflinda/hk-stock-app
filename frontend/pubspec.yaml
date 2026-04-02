@@ -48,8 +48,9 @@ dependencies:
   # Date/Time
   intl: ^0.18.1
   
-  # Charts (K-line visualization)
+  # Charts (K-line visualization - using CustomPainter)
   fl_chart: ^0.64.0
+
 
   # Local push notifications (price alerts, daily summary)
   flutter_local_notifications: ^17.0.0

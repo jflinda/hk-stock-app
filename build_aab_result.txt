@@ -1,0 +1,2 @@
+﻿Running Gradle task 'bundleRelease'...                             21.8s
+ÔêÜ Built build\app\outputs\bundle\release\app-release.aab (42.4MB)

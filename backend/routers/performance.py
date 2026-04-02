@@ -154,6 +154,7 @@ def _compute_holding_days(trades: List[Dict]) -> List[Dict]:
 # ── Main endpoint ─────────────────────────────────────────────────────────────
 
 @router.get("")
+@router.get("/overview")   # alias: /api/portfolio/performance/overview
 def get_performance() -> Dict[str, Any]:
     """
     Portfolio Performance Review — all 7 submodules in one response.

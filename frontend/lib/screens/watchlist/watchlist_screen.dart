@@ -6,7 +6,7 @@ import 'package:hk_stock_app/providers/watchlist_providers.dart';
 
 /// Watchlist Screen - Display user's watched stocks with real API data
 class WatchlistScreen extends ConsumerWidget {
-  const WatchlistScreen({Key? key}) : super(key: key);
+  const WatchlistScreen({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -42,7 +42,7 @@ class WatchlistScreen extends ConsumerWidget {
                   height: 80,
                   child: Center(child: CircularProgressIndicator()),
                 ),
-                error: (_, __) => const SizedBox.shrink(),
+                error: (_, s) => const SizedBox.shrink(),
               ),
             ),
 
@@ -200,14 +200,14 @@ class _StatBadge extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
       decoration: BoxDecoration(
-        color: color.withOpacity(0.1),
+        color: color.withValues(alpha: 0.1),
         borderRadius: BorderRadius.circular(6),
-        border: Border.all(color: color.withOpacity(0.3)),
+        border: Border.all(color: color.withValues(alpha: 0.3)),
       ),
       child: Column(
         children: [
           Text(label,
-              style: TextStyle(fontSize: 10, color: color.withOpacity(0.8))),
+              style: TextStyle(fontSize: 10, color: color.withValues(alpha: 0.8))),
           Text(value,
               style: TextStyle(
                   fontSize: 13,
@@ -338,7 +338,7 @@ class _WatchlistTile extends StatelessWidget {
                         padding: const EdgeInsets.symmetric(
                             horizontal: 5, vertical: 2),
                         decoration: BoxDecoration(
-                          color: Colors.orange.withOpacity(0.15),
+                          color: Colors.orange.withValues(alpha: 0.15),
                           borderRadius: BorderRadius.circular(4),
                         ),
                         child: const Text('🔔',
@@ -582,7 +582,7 @@ class _EmptyState extends StatelessWidget {
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             Icon(Icons.bookmark_border,
-                size: 64, color: Colors.grey.withOpacity(0.4)),
+                size: 64, color: Colors.grey.withValues(alpha: 0.4)),
             const SizedBox(height: 16),
             Text(
               message,
@@ -606,7 +606,7 @@ class _ErrorCard extends StatelessWidget {
       margin: const EdgeInsets.all(16),
       padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
-        color: Colors.red.withOpacity(0.1),
+        color: Colors.red.withValues(alpha: 0.1),
         borderRadius: BorderRadius.circular(8),
       ),
       child: Row(

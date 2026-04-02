@@ -1,0 +1,10 @@
+﻿Cleared trades table
+Inserted 12 trades - committed
+Added 7 new watchlist items (skipped 0 duplicates)
+Total watchlist items: 10
+
+API /api/trades returns 12 trades - OK
+API /api/portfolio/summary: totalValue=365750.0, totalPL=131982.33, holdings=3
+API /api/portfolio/performance overview: realizedPL=21644.5, winRate=75.0%
+
+Seed complete.

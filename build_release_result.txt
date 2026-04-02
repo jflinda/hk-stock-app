@@ -1,0 +1,15 @@
+﻿Upgrading build.gradle.kts
+Running Gradle task 'assembleRelease'...                        
+Font asset "MaterialIcons-Regular.otf" was tree-shaken, reducing it from 1645184 to 4796 bytes (99.7% reduction). Tree-shaking can be disabled by providing the --no-tree-shake-icons flag when building your app.
+flutter.bat : warning: [options] source value 8 is obsolete and will be removed in a future release
+At C:\Users\jflin\WorkBuddy\20260329125422\stocktrading\build_release.ps1:7 char:11
++ $result = & $flutterPath build apk --release 2>&1
++           ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: (warning: [optio... future release:String) [], RemoteException
+    + FullyQualifiedErrorId : NativeCommandError
+ 
+warning: [options] target value 8 is obsolete and will be removed in a future release
+warning: [options] To suppress warnings about obsolete options, use -Xlint:-options.
+3 warnings
+Running Gradle task 'assembleRelease'...                          275.9s
+ÔêÜ Built build\app\outputs\flutter-apk\app-release.apk (51.7MB)

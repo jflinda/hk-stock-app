@@ -1,0 +1,33 @@
+﻿=== Current DB State ===
+Trades: 0
+Watchlist: 3
+
+Watchlist schema:
+  id INTEGER
+  ticker TEXT
+  name TEXT
+  alert_price REAL
+  notes TEXT
+  added_at DATETIME
+  alert_type TEXT
+
+Sample watchlist rows:
+  {'id': 4, 'ticker': '0005', 'name': 'HSBC Holdings', 'alert_price': 250.0, 'notes': 'Banking stock', 'added_at': '2026-04-01 06:27:49', 'alert_type': 'above'}
+  {'id': 6, 'ticker': '1810', 'name': 'Xiaomi Corporation', 'alert_price': 95.0, 'notes': 'Smartphones', 'added_at': '2026-04-01 06:27:49', 'alert_type': 'above'}
+  {'id': 7, 'ticker': '2382', 'name': 'Ping An Insurance', 'alert_price': 50.0, 'notes': 'Insurance', 'added_at': '2026-04-01 06:27:49', 'alert_type': 'above'}
+
+Tables: ['trades', 'sqlite_sequence', 'watchlist', 'price_cache', 'stock_info_cache']
+
+Trades schema:
+  id INTEGER
+  ticker TEXT
+  name TEXT
+  direction TEXT
+  qty INTEGER
+  price REAL
+  fee REAL
+  trade_date DATE
+  notes TEXT
+  created_at DATETIME
+
+Done.

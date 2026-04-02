@@ -3,7 +3,7 @@ import 'package:hk_stock_app/constants/index.dart';
 
 /// Tools Screen - Provides calculation and analysis tools
 class ToolsScreen extends StatefulWidget {
-  const ToolsScreen({Key? key}) : super(key: key);
+  const ToolsScreen({super.key});
 
   @override
   State<ToolsScreen> createState() => _ToolsScreenState();
@@ -390,7 +390,7 @@ class _CurrencyConverterState extends State<_CurrencyConverter> {
             children: [
               Expanded(
                 child: DropdownButtonFormField<String>(
-                  value: fromCurrency,
+                  initialValue: fromCurrency,
                   items: rates.keys
                       .map((c) => DropdownMenuItem(value: c, child: Text(c)))
                       .toList(),
@@ -424,7 +424,7 @@ class _CurrencyConverterState extends State<_CurrencyConverter> {
               const SizedBox(width: 8),
               Expanded(
                 child: DropdownButtonFormField<String>(
-                  value: toCurrency,
+                  initialValue: toCurrency,
                   items: rates.keys
                       .map((c) => DropdownMenuItem(value: c, child: Text(c)))
                       .toList(),
@@ -449,7 +449,7 @@ class _CurrencyConverterState extends State<_CurrencyConverter> {
             decoration: BoxDecoration(
               color: AppColors.cardBg,
               borderRadius: BorderRadius.circular(12),
-              border: Border.all(color: AppColors.accentBlue.withOpacity(0.4)),
+              border: Border.all(color: AppColors.accentBlue.withValues(alpha: 0.4)),
             ),
             child: Column(
               children: [
@@ -470,7 +470,7 @@ class _CurrencyConverterState extends State<_CurrencyConverter> {
                 const SizedBox(height: 4),
                 Text(
                   '${amountCtrl.text.isEmpty ? "0" : amountCtrl.text} $fromCurrency = $_convertedAmount $toCurrency',
-                  style: TextStyle(fontSize: 11, color: Colors.grey.withOpacity(0.6)),
+                  style: TextStyle(fontSize: 11, color: Colors.grey.withValues(alpha: 0.6)),
                 ),
               ],
             ),
@@ -478,7 +478,7 @@ class _CurrencyConverterState extends State<_CurrencyConverter> {
           const SizedBox(height: 12),
           Text(
             'Rates are indicative only. Updated periodically.',
-            style: TextStyle(fontSize: 10, color: Colors.grey.withOpacity(0.5)),
+            style: TextStyle(fontSize: 10, color: Colors.grey.withValues(alpha: 0.5)),
           ),
         ],
       ),

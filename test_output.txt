@@ -1,0 +1,58 @@
+﻿============================================================
+API TEST RUNNER  base=http://localhost:8001
+============================================================
+
+--- 1. Ping ---
+[PASS] GET /ping status 200
+
+--- 2. Market Indices ---
+[PASS] GET /api/market/indices
+[PASS]   returns list
+[PASS]   has name+price+change_pct
+[PASS]   price > 0 (24788.14)
+
+--- 3. Stock Quote 0700.HK ---
+[PASS] GET /api/stock/0700.HK/quote
+[PASS]   has price (496.6)
+[PASS]   has name (TENCENT)
+[PASS]   has change_pct
+
+--- 4. Stock History 0700.HK ---
+[PASS] GET /api/stock/0700.HK/history
+[PASS]   returns non-empty list (61 records)
+[PASS]   has OHLCV fields
+
+--- 5. Watchlist ---
+[PASS] GET /api/watchlist
+[PASS]   returns list (10 items)
+[PASS]   has ticker+price+changePct
+
+--- 6. Portfolio Summary ---
+[PASS] GET /api/portfolio/summary
+[PASS]   has totalValue+totalPL+totalHoldings
+[PASS]   totalValue (365750.0)
+
+--- 7. Portfolio Positions ---
+[PASS] GET /api/portfolio/positions
+[PASS]   returns list (3 items)
+[PASS]   has required fields
+
+--- 8. Trades ---
+[PASS] GET /api/trades
+[PASS]   returns list (12 trades)
+[PASS]   has required fields
+
+--- 9. Performance Overview ---
+[PASS] GET /api/portfolio/performance/overview
+
+--- 10. Stock Search ---
+[PASS] GET /api/stock/search?q=0700
+[PASS]   returns results (1)
+
+--- 11. Market Movers (30s timeout) ---
+[PASS] GET /api/market/movers
+[PASS]   has gainers+losers+turnover
+
+============================================================
+RESULT: 29 passed, 0 failed out of 29 checks
+============================================================

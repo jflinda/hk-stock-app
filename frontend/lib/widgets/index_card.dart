@@ -7,9 +7,9 @@ class IndexCard extends StatelessWidget {
   final MarketIndex index;
   
   const IndexCard({
-    Key? key,
+    super.key,
     required this.index,
-  }) : super(key: key);
+  });
   
   @override
   Widget build(BuildContext context) {
@@ -43,7 +43,7 @@ class IndexCard extends StatelessWidget {
                 ),
               ),
               Text(
-                '${index.isUp ? '▲' : '▼'}',
+                index.isUp ? '▲' : '▼',
                 style: TextStyle(
                   fontSize: 12,
                   color: color,

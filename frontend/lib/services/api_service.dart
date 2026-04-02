@@ -1,9 +1,11 @@
+import 'package:flutter/foundation.dart';
 import 'package:dio/dio.dart';
 import 'package:hk_stock_app/models/index.dart';
 
 /// API Service - handles all HTTP requests to backend
 class ApiService {
-  static const String baseUrl = 'http://localhost:8000/api';
+  // Use local IP for mobile testing, localhost for emulator
+  static const String baseUrl = 'http://192.168.3.30:8001/api';
   
   late Dio _dio;
   bool _useMockData = false;  // Toggle to use mock data for testing
@@ -22,7 +24,7 @@ class ApiService {
     _dio.interceptors.add(LogInterceptor(
       requestBody: true,
       responseBody: true,
-      logPrint: (obj) => print('[Dio] $obj'),
+      logPrint: (obj) => debugPrint('[Dio] $obj'),
     ));
   }
   
@@ -91,7 +93,7 @@ class ApiService {
       }
       throw Exception('Failed to load market indices');
     } catch (e) {
-      print('Error fetching market indices: $e');
+      debugPrint('Error fetching market indices: $e');
       rethrow;
     }
   }
@@ -140,7 +142,7 @@ class ApiService {
       }
       throw Exception('Failed to load movers');
     } catch (e) {
-      print('Error fetching movers: $e');
+      debugPrint('Error fetching movers: $e');
       rethrow;
     }
   }
@@ -156,7 +158,7 @@ class ApiService {
       }
       throw Exception('Failed to load stock quote for $ticker');
     } catch (e) {
-      print('Error fetching stock quote for $ticker: $e');
+      debugPrint('Error fetching stock quote for $ticker: $e');
       rethrow;
     }
   }
@@ -179,7 +181,7 @@ class ApiService {
       }
       throw Exception('Failed to load history for $ticker');
     } catch (e) {
-      print('Error fetching history for $ticker: $e');
+      debugPrint('Error fetching history for $ticker: $e');
       rethrow;
     }
   }
@@ -199,7 +201,7 @@ class ApiService {
       }
       throw Exception('Failed to search stocks');
     } catch (e) {
-      print('Error searching stocks: $e');
+      debugPrint('Error searching stocks: $e');
       rethrow;
     }
   }
@@ -217,7 +219,7 @@ class ApiService {
       }
       throw Exception('Failed to load watchlist');
     } catch (e) {
-      print('Error fetching watchlist: $e');
+      debugPrint('Error fetching watchlist: $e');
       rethrow;
     }
   }
@@ -245,7 +247,7 @@ class ApiService {
       }
       throw Exception('Failed to add to watchlist');
     } catch (e) {
-      print('Error adding to watchlist: $e');
+      debugPrint('Error adding to watchlist: $e');
       rethrow;
     }
   }
@@ -259,7 +261,7 @@ class ApiService {
         throw Exception('Failed to remove from watchlist');
       }
     } catch (e) {
-      print('Error removing from watchlist: $e');
+      debugPrint('Error removing from watchlist: $e');
       rethrow;
     }
   }
@@ -274,7 +276,7 @@ class ApiService {
       }
       throw Exception('Failed to load portfolio summary');
     } catch (e) {
-      print('Error fetching portfolio summary: $e');
+      debugPrint('Error fetching portfolio summary: $e');
       rethrow;
     }
   }
@@ -292,7 +294,7 @@ class ApiService {
       }
       throw Exception('Failed to load positions');
     } catch (e) {
-      print('Error fetching positions: $e');
+      debugPrint('Error fetching positions: $e');
       rethrow;
     }
   }
@@ -318,7 +320,7 @@ class ApiService {
       }
       throw Exception('Failed to load trades');
     } catch (e) {
-      print('Error fetching trades: $e');
+      debugPrint('Error fetching trades: $e');
       rethrow;
     }
   }
@@ -359,7 +361,7 @@ class ApiService {
       }
       throw Exception('Failed to add trade');
     } catch (e) {
-      print('Error adding trade: $e');
+      debugPrint('Error adding trade: $e');
       rethrow;
     }
   }
@@ -373,7 +375,7 @@ class ApiService {
         throw Exception('Failed to delete trade');
       }
     } catch (e) {
-      print('Error deleting trade: $e');
+      debugPrint('Error deleting trade: $e');
       rethrow;
     }
   }
@@ -387,7 +389,7 @@ class ApiService {
       }
       throw Exception('Failed to load performance data');
     } catch (e) {
-      print('Error fetching performance: $e');
+      debugPrint('Error fetching performance: $e');
       rethrow;
     }
   }
@@ -404,7 +406,7 @@ class ApiService {
       }
       throw Exception('Failed to export trades');
     } catch (e) {
-      print('Error exporting trades CSV: $e');
+      debugPrint('Error exporting trades CSV: $e');
       rethrow;
     }
   }

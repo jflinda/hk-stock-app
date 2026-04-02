@@ -9,11 +9,11 @@ class StockRow extends StatelessWidget {
   final bool showVolume;
   
   const StockRow({
-    Key? key,
+    super.key,
     required this.mover,
     this.onTap,
     this.showVolume = false,
-  }) : super(key: key);
+  });
   
   @override
   Widget build(BuildContext context) {

@@ -8,7 +8,7 @@ import 'package:hk_stock_app/services/api_service.dart';
 
 /// Portfolio Screen - Display positions, performance, and trading journal
 class PortfolioScreen extends ConsumerStatefulWidget {
-  const PortfolioScreen({Key? key}) : super(key: key);
+  const PortfolioScreen({super.key});
 
   @override
   ConsumerState<PortfolioScreen> createState() => _PortfolioScreenState();
@@ -345,7 +345,7 @@ class _TradeCard extends StatelessWidget {
       background: Container(
         alignment: Alignment.centerRight,
         padding: const EdgeInsets.only(right: 16),
-        color: Colors.red.withOpacity(0.8),
+        color: Colors.red.withValues(alpha: 0.8),
         child: const Icon(Icons.delete_outline, color: Colors.white),
       ),
       confirmDismiss: (_) async {
@@ -370,17 +370,21 @@ class _TradeCard extends StatelessWidget {
       onDismissed: (_) async {
         try {
           await ref.read(deleteTradeProvider(trade.id).future);
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-                content: Text('Trade deleted'),
-                backgroundColor: AppColors.cardBg),
-          );
+          if (context.mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                  content: Text('Trade deleted'),
+                  backgroundColor: AppColors.cardBg),
+            );
+          }
         } catch (e) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-                content: Text('Failed to delete: $e'),
-                backgroundColor: Colors.red),
-          );
+          if (context.mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                  content: Text('Failed to delete: $e'),
+                  backgroundColor: Colors.red),
+            );
+          }
         }
       },
       child: Container(
@@ -397,7 +401,7 @@ class _TradeCard extends StatelessWidget {
               width: 42,
               height: 42,
               decoration: BoxDecoration(
-                color: typeColor.withOpacity(0.12),
+                color: typeColor.withValues(alpha: 0.12),
                 borderRadius: BorderRadius.circular(8),
               ),
               child: Icon(
@@ -728,7 +732,7 @@ class _AddTradeModalState extends ConsumerState<_AddTradeModal> {
                   padding: const EdgeInsets.all(10),
                   margin: const EdgeInsets.only(bottom: 12),
                   decoration: BoxDecoration(
-                    color: Colors.red.withOpacity(0.1),
+                    color: Colors.red.withValues(alpha: 0.1),
                     borderRadius: BorderRadius.circular(8),
                   ),
                   child: Text(
@@ -794,7 +798,7 @@ class _TypeButton extends StatelessWidget {
         duration: const Duration(milliseconds: 200),
         padding: const EdgeInsets.symmetric(vertical: 12),
         decoration: BoxDecoration(
-          color: isSelected ? color.withOpacity(0.2) : AppColors.darkBg,
+          color: isSelected ? color.withValues(alpha: 0.2) : AppColors.darkBg,
           borderRadius: BorderRadius.circular(8),
           border: Border.all(
               color: isSelected ? color : AppColors.borderColor, width: 1.5),
@@ -864,7 +868,7 @@ class _EmptyState extends StatelessWidget {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(icon, size: 64, color: Colors.grey.withOpacity(0.4)),
+            Icon(icon, size: 64, color: Colors.grey.withValues(alpha: 0.4)),
             const SizedBox(height: 16),
             Text(
               message,
@@ -888,7 +892,7 @@ class _ErrorCard extends StatelessWidget {
       margin: const EdgeInsets.all(16),
       padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
-        color: Colors.red.withOpacity(0.1),
+        color: Colors.red.withValues(alpha: 0.1),
         borderRadius: BorderRadius.circular(8),
       ),
       child: Row(
@@ -1122,7 +1126,7 @@ class _MonthlyReturnsChart extends StatelessWidget {
                       Container(height: 16, color: AppColors.darkBg),
                       FractionallySizedBox(
                         widthFactor: barRatio,
-                        child: Container(height: 16, color: color.withOpacity(0.8)),
+                        child: Container(height: 16, color: color.withValues(alpha: 0.8)),
                       ),
                     ],
                   ),
@@ -1194,7 +1198,7 @@ class _CumPLPainter extends CustomPainter {
       ..style = PaintingStyle.stroke;
 
     final fillPaint = Paint()
-      ..color = lineColor.withOpacity(0.15)
+      ..color = lineColor.withValues(alpha: 0.15)
       ..style = PaintingStyle.fill;
 
     final path = Path();
@@ -1225,7 +1229,7 @@ class _CumPLPainter extends CustomPainter {
         Offset(0, zeroY),
         Offset(size.width, zeroY),
         Paint()
-          ..color = Colors.grey.withOpacity(0.3)
+          ..color = Colors.grey.withValues(alpha: 0.3)
           ..strokeWidth = 0.8,
       );
     }
@@ -1308,7 +1312,7 @@ class _SectorPLList extends StatelessWidget {
                   width: 50,
                   padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
                   decoration: BoxDecoration(
-                    color: color.withOpacity(0.12),
+                    color: color.withValues(alpha: 0.12),
                     borderRadius: BorderRadius.circular(4),
                   ),
                   child: Text(ticker,
@@ -1323,7 +1327,7 @@ class _SectorPLList extends StatelessWidget {
                       Container(height: 12, color: AppColors.darkBg),
                       FractionallySizedBox(
                         widthFactor: barRatio,
-                        child: Container(height: 12, color: color.withOpacity(0.75)),
+                        child: Container(height: 12, color: color.withValues(alpha: 0.75)),
                       ),
                     ],
                   ),
@@ -1469,7 +1473,7 @@ class _BenchmarkItem extends StatelessWidget {
           const SizedBox(height: 4),
           Text(value, style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: color)),
           if (subtitle != null)
-            Text(subtitle!, style: TextStyle(fontSize: 9, color: color.withOpacity(0.7))),
+            Text(subtitle!, style: TextStyle(fontSize: 9, color: color.withValues(alpha: 0.7))),
         ],
       ),
     );
